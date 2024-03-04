@@ -5175,7 +5175,13 @@ Expect<void> outputWasmLibrary(const std::filesystem::path &OutputPath,
 
   spdlog::info("output start");
 
-  std::ofstream OS(OutputPath, std::ios_base::binary);
+  std::filesystem::path OutputPathTmp(OutputPath);
+  OutputPathTmp.replace_extension("%%%%%%%%%%.wasm");
+  OutputPathTmp = createTemp(OutputPathTmp);
+  if (OutputPathTmp.empty()) {
+    return WasmEdge::Unexpect(WasmEdge::ErrCode::Value::IllegalPath);
+  }
+  std::ofstream OS(OutputPathTmp, std::ios_base::binary);
   if (!OS) {
     spdlog::error("output failed.");
     return Unexpect(ErrCode::Value::IllegalPath);
@@ -5188,6 +5194,7 @@ Expect<void> outputWasmLibrary(const std::filesystem::path &OutputPath,
 
   std::error_code Error;
   std::filesystem::remove(SharedObjectName, Error);
+  std::filesystem::rename(OutputPathTmp, OutputPath);
   return {};
 }
 

@@ -46,7 +46,12 @@ thread_local Fault *localHandler = nullptr;
   }
 }
 
+constexpr bool kDisableSignals = true;
+
 void enableHandler() noexcept {
+  if (kDisableSignals) {
+    return;
+  }
   struct sigaction Action {};
   Action.sa_sigaction = &signalHandler;
   Action.sa_flags = SA_SIGINFO;
@@ -56,6 +61,9 @@ void enableHandler() noexcept {
 }
 
 void disableHandler() noexcept {
+  if (kDisableSignals) {
+    return;
+  }
   std::signal(SIGFPE, SIG_DFL);
   std::signal(SIGBUS, SIG_DFL);
   std::signal(SIGSEGV, SIG_DFL);

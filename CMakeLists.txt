@@ -6,6 +6,14 @@ cmake_policy(SET CMP0091 NEW)
 if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
   cmake_policy(SET CMP0135 NEW)
 endif()
+
+include(cmake/HunterGate.cmake)
+HunterGate(
+  URL  https://github.com/qdrvm/hunter/archive/refs/tags/v0.25.3-qdrvm5.zip
+  SHA1 ae75fdf1850bd21dead239b8580012b6091be855
+  LOCAL
+)
+
 project(WasmEdge)
 
 # Overwrite it if you want to use static MSVC runtime library.
@@ -115,6 +123,12 @@ if(WASMEDGE_BUILD_COVERAGE)
   set(GCOVR_ADDITIONAL_ARGS "--exclude-unreachable-branches;--exclude-throw-branches")
   include(CodeCoverage)
   append_coverage_compiler_flags()
+endif()
+
+if(WASMEDGE_BUILD_AOT_RUNTIME)
+  hunter_add_package(ZLIB)
+  hunter_add_package(LLVM)
+  hunter_add_package(LLD)
 endif()
 
 include(Helper)
