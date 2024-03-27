@@ -14,7 +14,7 @@ HunterGate(
   LOCAL
 )
 
-project(WasmEdge)
+project(WasmEdge LANGUAGES CXX C)
 
 # Overwrite it if you want to use static MSVC runtime library.
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
