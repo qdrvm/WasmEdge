@@ -278,7 +278,7 @@ private:
 
   /// Helper function for throwing an exception.
   Expect<void> throwException(Runtime::StackManager &StackMgr,
-                              Runtime::Instance::TagInstance *,
+                              Runtime::Instance::TagInstance &TagInst,
                               AST::InstrView::iterator &PC) noexcept;
   /// @}
 
