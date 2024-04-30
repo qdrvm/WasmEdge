@@ -155,7 +155,7 @@ if(WASMEDGE_BUILD_COVERAGE)
   append_coverage_compiler_flags()
 endif()
 
-if(WASMEDGE_BUILD_AOT_RUNTIME)
+if(WASMEDGE_USE_LLVM)
   hunter_add_package(ZLIB)
   hunter_add_package(LLVM)
   hunter_add_package(LLD)
