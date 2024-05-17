@@ -13,6 +13,7 @@
 #include "vm/vm.h"
 #include "llvm/codegen.h"
 #include "llvm/compiler.h"
+#include "llvm/jit.h"
 
 #ifdef WASMEDGE_BUILD_FUZZING
 #include "driver/fuzzPO.h"
@@ -1716,6 +1717,36 @@ WASMEDGE_CAPI_EXPORT WasmEdge_Result WasmEdge_CompilerCompileFromBytes(
               return Cxt->Valid.validate(*Module);
             })
             .and_then([&]() noexcept { return Cxt->Compiler.compile(*Module); })
+            .and_then([&](auto Result) noexcept {
+              return Cxt->CodeGen.codegen(Data, std::move(Result), OutputPath);
+            });
+      },
+      EmptyThen, Cxt);
+#else
+  return genWasmEdge_Result(ErrCode::Value::AOTDisabled);
+#endif
+}
+
+WASMEDGE_CAPI_EXPORT WasmEdge_Result WasmEdge_CompilerCompileJITFromBytes(
+    WasmEdge_CompilerContext *Cxt [[maybe_unused]],
+    WasmEdge_ConfigureContext *ConfCxt [[maybe_unused]],
+    const WasmEdge_Bytes Bytes [[maybe_unused]],
+    const char *OutPath [[maybe_unused]]) {
+#ifdef WASMEDGE_USE_LLVM
+  return wrap(
+      [&]() -> WasmEdge::Expect<void> {
+        std::filesystem::path OutputPath = std::filesystem::absolute(OutPath);
+        auto Data = genSpan(Bytes.Buf, Bytes.Length);
+        std::unique_ptr<WasmEdge::AST::Module> Module;
+        return Cxt->Load.parseModule(Data)
+            .and_then([&](auto Result) noexcept {
+              Module = std::move(Result);
+              return Cxt->Valid.validate(*Module);
+            })
+            .and_then([&]() noexcept {
+              LLVM::JIT JIT(ConfCxt->Conf);
+              return Cxt->Compiler.compile(*Module);
+            })
             .and_then([&](auto Result) noexcept {
               return Cxt->CodeGen.codegen(Data, std::move(Result), OutputPath);
             });
