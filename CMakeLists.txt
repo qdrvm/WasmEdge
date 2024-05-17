@@ -9,8 +9,8 @@ endif()
 
 include(cmake/HunterGate.cmake)
 HunterGate(
-  URL  https://github.com/qdrvm/hunter/archive/b6c44ccfd5d9d0e87628737303084b4cfa9e200e.zip
-  SHA1 cecd3a154449c1b39fcf5dfaf1bed2c6bce0f67a
+  URL  https://github.com/qdrvm/hunter/archive/refs/tags/v0.25.3-qdrvm11.zip
+  SHA1 20620ee1e2e9738b2d4561be2622d71e8c73bee9
   LOCAL
 )
 
@@ -155,7 +155,11 @@ if(WASMEDGE_BUILD_COVERAGE)
   append_coverage_compiler_flags()
 endif()
 
+<<<<<<< HEAD
 if(WASMEDGE_BUILD_AOT_RUNTIME)
+=======
+if(WASMEDGE_USE_LLVM)
+>>>>>>> b38d24e9 (qdrvm)
   hunter_add_package(ZLIB)
   hunter_add_package(LLVM)
   hunter_add_package(LLD)
