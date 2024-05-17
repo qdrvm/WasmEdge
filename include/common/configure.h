@@ -152,7 +152,7 @@ public:
 
 private:
   std::atomic<uint32_t> MaxMemPage = 65536;
-  std::atomic<bool> EnableJIT = false;
+  std::atomic<bool> EnableJIT = true;
   std::atomic<bool> ForceInterpreter = false;
   std::atomic<bool> AllowAFUNIX = false;
 };
