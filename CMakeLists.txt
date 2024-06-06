@@ -14,8 +14,8 @@ set(HUNTER_CACHE_SERVERS
 
 include(cmake/HunterGate.cmake)
 HunterGate(
-  URL  https://github.com/qdrvm/hunter/archive/refs/heads/update/boost-1.85.zip
-  SHA1 40c34d168dfa7d2a44d146928befa2d9d5680a71
+  URL  https://github.com/qdrvm/hunter/archive/b1bc7f1f71da2520c37a6cc1b47e4213f16c7e93.zip
+  SHA1 fdbee4d3477245ced66c11558cddf229451be212
   LOCAL
 )
 
@@ -160,11 +160,7 @@ if(WASMEDGE_BUILD_COVERAGE)
   append_coverage_compiler_flags()
 endif()
 
-<<<<<<< HEAD
-if(WASMEDGE_BUILD_AOT_RUNTIME)
-=======
 if(WASMEDGE_USE_LLVM)
->>>>>>> b38d24e9 (qdrvm)
   hunter_add_package(ZLIB)
   hunter_add_package(LLVM)
   hunter_add_package(LLD)
