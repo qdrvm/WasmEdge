@@ -94,7 +94,8 @@ Expect<void> Executor::initMemory(Runtime::StackManager &StackMgr,
   return {};
 }
 
-Expect<uint32_t> Executor::dataSegmentOffset(Runtime::StackManager &StackMgr, const AST::DataSegment &DataSeg) {
+Expect<uint32_t> Executor::dataSegmentOffset(Runtime::StackManager &StackMgr,
+                                             const AST::DataSegment &DataSeg) {
   if (DataSeg.getMode() == AST::DataSegment::DataMode::Active) {
     if (auto Res = runExpression(StackMgr, DataSeg.getExpr().getInstrs());
         unlikely(!Res)) {

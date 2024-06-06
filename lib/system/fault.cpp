@@ -46,8 +46,7 @@ void signalHandler(int Signal, siginfo_t *Siginfo, void *) {
 }
 
 void enableHandler() noexcept {
-  [[maybe_unused]]
-  struct sigaction Action {};
+  [[maybe_unused]] struct sigaction Action {};
   Action.sa_sigaction = &signalHandler;
   Action.sa_flags = SA_SIGINFO;
   // sigaction(SIGFPE, &Action, nullptr);

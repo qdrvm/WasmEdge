@@ -188,7 +188,8 @@ public:
   }
 
   // [qdrvm]
-  Expect<uint32_t> dataSegmentOffset(Runtime::StackManager &StackMgr, const AST::DataSegment &DataSeg);
+  Expect<uint32_t> dataSegmentOffset(Runtime::StackManager &StackMgr,
+                                     const AST::DataSegment &DataSeg);
 
 private:
   /// Run Wasm bytecode expression for initialization.
@@ -848,8 +849,9 @@ private:
   };
 
   struct SavedThreadLocal {
-    SavedThreadLocal() : SavedThis(This), SavedCurrentStack(CurrentStack), SavedExecutionContext(ExecutionContext) {
-    }
+    SavedThreadLocal()
+        : SavedThis(This), SavedCurrentStack(CurrentStack),
+          SavedExecutionContext(ExecutionContext) {}
 
     SavedThreadLocal(const SavedThreadLocal &) = delete;
     SavedThreadLocal(SavedThreadLocal &&) = delete;
