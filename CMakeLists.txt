@@ -14,8 +14,8 @@ set(HUNTER_CACHE_SERVERS
 
 include(cmake/HunterGate.cmake)
 HunterGate(
-  URL  https://github.com/qdrvm/hunter/archive/b1bc7f1f71da2520c37a6cc1b47e4213f16c7e93.zip
-  SHA1 fdbee4d3477245ced66c11558cddf229451be212
+  URL  https://github.com/qdrvm/hunter/archive/refs/tags/v0.25.3-qdrvm14.zip
+  SHA1 6fc0eb2ab6b85cec6f43d247eb43c0ab0ecdaa65
   LOCAL
 )
 
