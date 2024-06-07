@@ -16,7 +16,11 @@ elseif(EXISTS "${WASMEDGE_STATIC_LIB}")
   set_property(TARGET WasmEdge::WasmEdge PROPERTY IMPORTED_LOCATION "${WASMEDGE_STATIC_LIB}")
   
 else()
-  message(FATAL_ERROR "WasmEdge not found in ${WASMEDGE_ROOT}")
+  message(FATAL_ERROR "WasmEdge not found in ${WASMEDGE_ROOT}!")
+  message(FATAL_ERROR "Tried:")
+  message(FATAL_ERROR " - ${WASMEDGE_SHARED_LIB}")
+  message(FATAL_ERROR " - ${WASMEDGE_STATIC_LIB}")
+  message(FATAL_ERROR " - ${WASMEDGE_STATIC_LIB_DEBUG}")
 endif()
 
 target_include_directories(WasmEdge::WasmEdge INTERFACE "${WASMEDGE_ROOT}/include")
