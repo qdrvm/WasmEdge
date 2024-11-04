@@ -12,6 +12,9 @@ on:
       release:
         type: boolean
 
+permissions:
+  contents: read
+
 jobs:
   build_on_manylinux:
     permissions:
@@ -42,7 +45,7 @@ jobs:
       - name: Install gh on manylinux
         if: ${{ inputs.release }}
         run: |
-          type -p yum-config-manager >/dev/null || sudo yum install yum-utils
+          type -p yum-config-manager >/dev/null || yum install -y yum-utils
           yum-config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
           yum install -y gh
       - name: Upload rpm package

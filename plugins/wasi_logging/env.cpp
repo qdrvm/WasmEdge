@@ -1,5 +1,8 @@
-#include "wasi_logging/env.h"
-#include "wasi_logging/module.h"
+// SPDX-License-Identifier: Apache-2.0
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
+
+#include "env.h"
+#include "module.h"
 
 namespace WasmEdge {
 namespace Host {
@@ -28,9 +31,8 @@ Plugin::Plugin::PluginDescriptor Descriptor{
     .AddOptions = nullptr,
 };
 
+EXPORT_GET_DESCRIPTOR(Descriptor)
+
 } // namespace
-
-Plugin::PluginRegister WasiLoggingEnvironment::Register(&Descriptor);
-
 } // namespace Host
 } // namespace WasmEdge
