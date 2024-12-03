@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "ctx.h"
 #include "asymmetric_common/module.h"
@@ -72,9 +72,10 @@ Plugin::Plugin::PluginDescriptor Descriptor{
     .AddOptions = nullptr,
 };
 
+EXPORT_GET_DESCRIPTOR(Descriptor)
+
 } // namespace
 
-Plugin::PluginRegister WasiCrypto::Context::Register(&Descriptor);
 std::shared_mutex WasiCrypto::Context::Mutex;
 std::weak_ptr<WasiCrypto::Context> WasiCrypto::Context::Instance;
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 //===-- wasmedge/po/argument_parser.h - Argument parser -------------------===//
 //
@@ -140,8 +140,6 @@ private:
       const ArgumentDescriptor &CurrentDesc = ArgumentDescriptors[Iter->second];
       if (CurrentDesc.max_nargs() == 0) {
         return false;
-        CurrentDesc.default_value();
-        return true;
       }
 
       CurrentDesc.raw_value(Value);

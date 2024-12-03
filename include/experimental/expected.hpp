@@ -1380,7 +1380,6 @@ public:
   template <class U> using rebind = expected<U, error_type>;
 
   // 4.1, constructors
-  using impl_base::impl_base;
   constexpr expected() = default;
   constexpr expected(const expected &) = default;
   constexpr expected(expected &&) = default;
@@ -1615,7 +1614,14 @@ public:
   }
   constexpr const_rvalue_reference_type value() const && {
     if (!has_value()) {
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:5272)
+#endif
       throw(bad_expected_access<E>(std::move(error())));
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
     }
     return std::move(impl_base::val());
   }
@@ -1627,7 +1633,14 @@ public:
   }
   constexpr rvalue_reference_type value() && {
     if (!has_value()) {
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:5272)
+#endif
       throw(bad_expected_access<E>(std::move(error())));
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
     }
     return std::move(impl_base::val());
   }

@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "plugin/plugin.h"
 #include "common/errcode.h"
 #include "common/version.h"
 #include "wasmedge/wasmedge.h"
+
+// BUILTIN-PLUGIN: Headers for built-in plug-ins.
+#include "plugin/wasi_logging/module.h"
+
 #include <type_traits>
 #include <variant>
 
@@ -14,6 +18,33 @@
 #include <unistd.h>
 #elif WASMEDGE_OS_WINDOWS
 #include "system/winapi.h"
+
+static bool GetFunctionModuleFileName(void *FuncPtr,
+                                      std::filesystem::path &Path) {
+  WasmEdge::winapi::HMODULE_ Module = nullptr;
+
+  if (!WasmEdge::winapi::GetModuleHandleExW(
+          WasmEdge::winapi::GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS_ |
+              WasmEdge::winapi::GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT_,
+          reinterpret_cast<WasmEdge::winapi::LPCWSTR_>(FuncPtr), &Module)) {
+    return false;
+  }
+
+  std::vector<wchar_t> Buffer;
+  WasmEdge::winapi::DWORD_ CopiedSize;
+  do {
+    Buffer.resize(Buffer.size() + WasmEdge::winapi::MAX_PATH_);
+    CopiedSize = WasmEdge::winapi::GetModuleFileNameW(
+        Module, Buffer.data(),
+        static_cast<WasmEdge::winapi::DWORD_>(Buffer.size()));
+    if (CopiedSize == 0) {
+      return false;
+    }
+  } while (CopiedSize >= Buffer.size());
+
+  Path.assign(std::wstring_view(Buffer.data(), CopiedSize));
+  return true;
+}
 #endif
 
 namespace WasmEdge {
@@ -36,32 +67,6 @@ template <> struct Parser<WasmEdge_String> {
 namespace Plugin {
 
 namespace {
-static unsigned int NiftyCounter = 0;
-static std::aligned_storage_t<sizeof(std::vector<Plugin>),
-                              alignof(std::vector<Plugin>)>
-    PluginRegistryStorage;
-static std::aligned_storage_t<
-    sizeof(std::unordered_map<std::string_view, std::size_t>),
-    alignof(std::unordered_map<std::string_view, std::size_t>)>
-    PluginNameLookupStorage;
-
-void IncreaseNiftyCounter() noexcept {
-  if (NiftyCounter++ == 0) {
-    new (&PluginRegistryStorage) std::vector<Plugin>();
-    new (&PluginNameLookupStorage)
-        std::unordered_map<std::string_view, std::size_t>();
-  }
-}
-
-void DecreaseNiftyCounter() noexcept {
-  if (--NiftyCounter == 0) {
-    reinterpret_cast<std::vector<Plugin> &>(PluginRegistryStorage)
-        .~vector<Plugin>();
-    reinterpret_cast<std::unordered_map<std::string_view, std::size_t> &>(
-        PluginNameLookupStorage)
-        .~unordered_map<std::string_view, std::size_t>();
-  }
-}
 
 class CAPIPluginRegister {
 public:
@@ -69,8 +74,6 @@ public:
   CAPIPluginRegister &operator=(const CAPIPluginRegister &) = delete;
 
   CAPIPluginRegister(const WasmEdge_PluginDescriptor *Desc) noexcept {
-    IncreaseNiftyCounter();
-
     ModuleDescriptions.resize(Desc->ModuleCount);
     for (size_t I = 0; I < ModuleDescriptions.size(); ++I) {
       ModuleDescriptions[I].Name = Desc->ModuleDescriptions[I].Name;
@@ -167,9 +170,9 @@ public:
       }
     }
 
-    Plugin::registerPlugin(&Descriptor);
+    Result = Plugin::registerPlugin(&Descriptor);
   }
-  ~CAPIPluginRegister() noexcept { DecreaseNiftyCounter(); }
+  bool result() const noexcept { return Result; }
 
 private:
   static Runtime::Instance::ModuleInstance *
@@ -213,6 +216,8 @@ private:
   static std::unordered_map<const PluginModule::ModuleDescriptor *,
                             const WasmEdge_ModuleDescriptor *>
       DescriptionLookup;
+
+  bool Result = false;
 };
 std::unordered_map<const PluginModule::ModuleDescriptor *,
                    const WasmEdge_ModuleDescriptor *>
@@ -222,11 +227,17 @@ std::vector<std::unique_ptr<CAPIPluginRegister>> CAPIPluginRegisters;
 
 } // namespace
 
-std::vector<Plugin> &Plugin::PluginRegistry =
-    reinterpret_cast<std::vector<Plugin> &>(PluginRegistryStorage);
-std::unordered_map<std::string_view, std::size_t> &Plugin::PluginNameLookup =
-    reinterpret_cast<std::unordered_map<std::string_view, std::size_t> &>(
-        PluginNameLookupStorage);
+std::mutex WasmEdge::Plugin::Plugin::Mutex;
+std::vector<Plugin> WasmEdge::Plugin::Plugin::PluginRegistry;
+std::unordered_map<std::string_view, std::size_t>
+    WasmEdge::Plugin::Plugin::PluginNameLookup;
+
+void Plugin::loadFromDefaultPaths() noexcept {
+  registerBuiltInPlugins();
+  for (const auto &Path : Plugin::Plugin::getDefaultPluginPaths()) {
+    Plugin::Plugin::load(Path);
+  }
+}
 
 std::vector<std::filesystem::path> Plugin::getDefaultPluginPaths() noexcept {
   using namespace std::literals::string_view_literals;
@@ -285,9 +296,15 @@ std::vector<std::filesystem::path> Plugin::getDefaultPluginPaths() noexcept {
     return std::vector<std::filesystem::path>();
   }
 #elif WASMEDGE_OS_WINDOWS
-  // FIXME: Use the `dladdr`.
   // Global plugin directory.
-  Result.push_back(std::filesystem::u8path(kGlobalPluginDir));
+  if (std::filesystem::path Path; GetFunctionModuleFileName(
+          reinterpret_cast<void *>(Plugin::getDefaultPluginPaths), Path)) {
+    Result.push_back(Path.parent_path());
+  } else {
+    spdlog::error("Failed to get the path of the current module."sv);
+    return std::vector<std::filesystem::path>();
+  }
+
   // Local home plugin directory.
   std::filesystem::path Home;
   if (const auto HomeEnv = ::getenv("USERPROFILE")) {
@@ -322,7 +339,6 @@ WASMEDGE_EXPORT bool Plugin::load(const std::filesystem::path &Path) noexcept {
   auto Status = std::filesystem::status(Path, Error);
   if (likely(!Error)) {
     if (std::filesystem::is_directory(Status)) {
-
       bool Result = false;
       for (const auto &Entry : std::filesystem::recursive_directory_iterator(
                Path, std::filesystem::directory_options::skip_permission_denied,
@@ -342,32 +358,22 @@ WASMEDGE_EXPORT bool Plugin::load(const std::filesystem::path &Path) noexcept {
   return false;
 }
 
-bool Plugin::loadFile(const std::filesystem::path &Path) noexcept {
-  const auto Index = PluginRegistry.size();
-
-  auto Lib = std::make_shared<Loader::SharedLibrary>();
-  if (auto Res = Lib->load(Path); unlikely(!Res)) {
+bool Plugin::registerPlugin(const PluginDescriptor *Desc) noexcept {
+  if (Desc->APIVersion != CurrentAPIVersion) {
+    spdlog::debug(
+        "Plugin: API version {} of plugin {} is not match to current {}."sv,
+        Desc->APIVersion, Desc->Name, CurrentAPIVersion);
+    return false;
+  }
+  if (PluginNameLookup.find(Desc->Name) != PluginNameLookup.end()) {
+    spdlog::debug("Plugin: {} has already loaded."sv, Desc->Name);
     return false;
   }
 
-  if (PluginRegistry.size() != Index + 1) {
-    // Check C interface
-    if (auto GetDescriptor = Lib->get<decltype(WasmEdge_Plugin_GetDescriptor)>(
-            "WasmEdge_Plugin_GetDescriptor");
-        unlikely(!GetDescriptor)) {
-      return false;
-    } else if (const auto *Descriptor = GetDescriptor();
-               unlikely(!Descriptor)) {
-      return false;
-    } else {
-      CAPIPluginRegisters.push_back(
-          std::make_unique<CAPIPluginRegister>(Descriptor));
-    }
-  }
+  const auto Index = PluginRegistry.size();
+  PluginRegistry.emplace_back(Desc);
+  PluginNameLookup.emplace(Desc->Name, Index);
 
-  auto &Plugin = PluginRegistry.back();
-  Plugin.Path = Path;
-  Plugin.Lib = std::move(Lib);
   return true;
 }
 
@@ -380,29 +386,58 @@ void Plugin::addPluginOptions(PO::ArgumentParser &Parser) noexcept {
 }
 
 WASMEDGE_EXPORT const Plugin *Plugin::find(std::string_view Name) noexcept {
-  if (NiftyCounter != 0) {
-    if (auto Iter = PluginNameLookup.find(Name);
-        Iter != PluginNameLookup.end()) {
-      return std::addressof(PluginRegistry[Iter->second]);
-    }
+  if (auto Iter = PluginNameLookup.find(Name); Iter != PluginNameLookup.end()) {
+    return std::addressof(PluginRegistry[Iter->second]);
   }
   return nullptr;
 }
 
 Span<const Plugin> Plugin::plugins() noexcept { return PluginRegistry; }
 
-WASMEDGE_EXPORT void
-Plugin::registerPlugin(const PluginDescriptor *Desc) noexcept {
-  assuming(NiftyCounter != 0);
-  if (Desc->APIVersion != CurrentAPIVersion) {
-    return;
+bool Plugin::loadFile(const std::filesystem::path &Path) noexcept {
+  std::unique_lock Lock(Mutex);
+  bool Result = false;
+  auto Lib = std::make_shared<Loader::SharedLibrary>();
+  if (auto Res = Lib->load(Path); unlikely(!Res)) {
+    return false;
   }
 
-  const auto Index = PluginRegistry.size();
-  PluginRegistry.push_back(Plugin(Desc));
-  PluginNameLookup.emplace(Desc->Name, Index);
+  if (auto GetDescriptor =
+          Lib->get<Plugin::PluginDescriptor const *()>("GetDescriptor")) {
+    Result = Plugin::registerPlugin(GetDescriptor());
+  }
 
-  return;
+  if (!Result) {
+    // Check C interface
+    if (auto GetDescriptor = Lib->get<decltype(WasmEdge_Plugin_GetDescriptor)>(
+            "WasmEdge_Plugin_GetDescriptor");
+        unlikely(!GetDescriptor)) {
+      return false;
+    } else if (const auto *Descriptor = GetDescriptor();
+               unlikely(!Descriptor)) {
+      return false;
+    } else {
+      Result =
+          CAPIPluginRegisters
+              .emplace_back(std::make_unique<CAPIPluginRegister>(Descriptor))
+              ->result();
+    }
+  }
+
+  if (!Result) {
+    return false;
+  }
+
+  auto &Plugin = PluginRegistry.back();
+  Plugin.Path = Path;
+  Plugin.Lib = std::move(Lib);
+  return true;
+}
+
+void Plugin::registerBuiltInPlugins() noexcept {
+  std::unique_lock Lock(Mutex);
+  // BUILTIN-PLUGIN: Register wasi-logging here. May be refactored in 0.15.0.
+  registerPlugin(&Host::WasiLoggingModule::PluginDescriptor);
 }
 
 Plugin::Plugin(const PluginDescriptor *D) noexcept : Desc(D) {
@@ -411,6 +446,13 @@ Plugin::Plugin(const PluginDescriptor *D) noexcept : Desc(D) {
     const auto Index = ModuleRegistry.size();
     ModuleRegistry.push_back(PluginModule(&ModuleDesc));
     ModuleNameLookup.emplace(ModuleDesc.Name, Index);
+  }
+  for (const auto &ComponentDesc :
+       Span<const PluginComponent::ComponentDescriptor>(
+           D->ComponentDescriptions, D->ComponentCount)) {
+    const auto Index = ComponentRegistry.size();
+    ComponentRegistry.push_back(PluginComponent(&ComponentDesc));
+    ComponentNameLookup.emplace(ComponentDesc.Name, Index);
   }
 }
 
@@ -422,15 +464,13 @@ Plugin::findModule(std::string_view Name) const noexcept {
   return nullptr;
 }
 
-WASMEDGE_EXPORT
-PluginRegister::PluginRegister(const Plugin::PluginDescriptor *Desc) noexcept {
-  IncreaseNiftyCounter();
-  Plugin::registerPlugin(Desc);
+WASMEDGE_EXPORT const PluginComponent *
+Plugin::findComponent(std::string_view Name) const noexcept {
+  if (auto Iter = ComponentNameLookup.find(Name);
+      Iter != ComponentNameLookup.end()) {
+    return std::addressof(ComponentRegistry[Iter->second]);
+  }
+  return nullptr;
 }
-
-WASMEDGE_EXPORT PluginRegister::~PluginRegister() noexcept {
-  DecreaseNiftyCounter();
-}
-
 } // namespace Plugin
 } // namespace WasmEdge

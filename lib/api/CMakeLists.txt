@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
-# SPDX-FileCopyrightText: 2019-2022 Second State INC
+# SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 find_package(spdlog QUIET)
 add_definitions(-DWASMEDGE_COMPILE_LIBRARY)
-if(WASMEDGE_BUILD_AOT_RUNTIME)
-  add_definitions(-DWASMEDGE_BUILD_AOT_RUNTIME)
+if(WASMEDGE_USE_LLVM)
+  add_definitions(-DWASMEDGE_USE_LLVM)
 endif()
 if(WASMEDGE_BUILD_WASI_NN_RPC)
   add_definitions(-DWASMEDGE_BUILD_WASI_NN_RPC)
@@ -82,10 +82,11 @@ target_link_libraries(wasmedgeCAPI
   wasmedgeDriver
 )
 
-if (WASMEDGE_BUILD_AOT_RUNTIME)
+if(WASMEDGE_USE_LLVM)
   target_link_libraries(wasmedgeCAPI
     PUBLIC
     wasmedgeAOT
+    wasmedgeLLVM
   )
 endif()
 
@@ -96,7 +97,6 @@ target_include_directories(wasmedgeCAPI
 )
 
 if(WASMEDGE_BUILD_SHARED_LIB)
-
   wasmedge_add_library(wasmedge_shared SHARED
     ../../include/api/wasmedge/wasmedge.h
   )
@@ -137,7 +137,6 @@ if(WASMEDGE_BUILD_SHARED_LIB)
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wasmedge
   )
-
 endif()
 
 if(WASMEDGE_BUILD_STATIC_LIB)
@@ -152,15 +151,19 @@ if(WASMEDGE_BUILD_STATIC_LIB)
   wasmedge_add_static_lib_component_command(wasmedgeExecutor)
   wasmedge_add_static_lib_component_command(wasmedgeHostModuleWasi)
   wasmedge_add_static_lib_component_command(wasmedgePlugin)
+  # BUILTIN-PLUGIN: Temporary add the wasi-logging plugin here until the new
+  # plugin architecture ready in 0.15.0.
+  wasmedge_add_static_lib_component_command(wasmedgePluginWasiLogging)
   wasmedge_add_static_lib_component_command(wasmedgeVM)
   wasmedge_add_static_lib_component_command(wasmedgeDriver)
 
-  if(WASMEDGE_BUILD_AOT_RUNTIME)
+  if(WASMEDGE_USE_LLVM)
     foreach(LIB_NAME IN LISTS WASMEDGE_LLVM_LINK_STATIC_COMPONENTS)
       wasmedge_add_libs_component_command(${LIB_NAME})
     endforeach()
     wasmedge_add_static_lib_component_command(utilBlake3)
     wasmedge_add_static_lib_component_command(wasmedgeAOT)
+    wasmedge_add_static_lib_component_command(wasmedgeLLVM)
   endif()
 
   if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "processenv.h"
 #include "processmodule.h"
@@ -56,9 +56,8 @@ Plugin::Plugin::PluginDescriptor Descriptor{
     .AddOptions = addOptions,
 };
 
+EXPORT_GET_DESCRIPTOR(Descriptor)
+
 } // namespace
-
-Plugin::PluginRegister WasmEdgeProcessEnvironment::Register(&Descriptor);
-
 } // namespace Host
 } // namespace WasmEdge

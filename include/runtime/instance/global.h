@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 //===-- wasmedge/runtime/instance/global.h - Global Instance definition ---===//
 //
@@ -35,9 +35,10 @@ public:
 
   /// Getter of value.
   const ValVariant &getValue() const noexcept { return Value; }
-
-  /// Getter of value.
   ValVariant &getValue() noexcept { return Value; }
+
+  /// Setter of value.
+  void setValue(const ValVariant &Val) noexcept { Value = Val; }
 
 private:
   /// \name Data of global instance.

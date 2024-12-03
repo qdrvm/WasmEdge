@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "tensorflowlite_func.h"
 
-#include "common/log.h"
 #include "common/span.h"
+#include "common/spdlog.h"
 
 #include "tensorflow/lite/c/c_api.h"
 

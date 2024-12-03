@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 //===-- wasmedge/common/statistics.h - Executor statistics definition -----===//
 //
@@ -16,8 +16,8 @@
 #include "common/configure.h"
 #include "common/enum_ast.hpp"
 #include "common/errcode.h"
-#include "common/log.h"
 #include "common/span.h"
+#include "common/spdlog.h"
 #include "common/timer.h"
 
 #include <atomic>

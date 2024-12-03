@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 //===-- wasmedge/test/executor/ExecutorTest.cpp - Wasm test suites --------===//
 //
@@ -14,7 +14,7 @@
 ///
 //===----------------------------------------------------------------------===//
 
-#include "common/log.h"
+#include "common/spdlog.h"
 #include "vm/vm.h"
 
 #include "../spec/hostfunc.h"

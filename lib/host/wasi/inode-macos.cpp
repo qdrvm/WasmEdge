@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "common/defines.h"
 #if WASMEDGE_OS_MACOS
 
 #include "common/errcode.h"
-#include "common/log.h"
+#include "common/spdlog.h"
 #include "common/variant.h"
 #include "host/wasi/environ.h"
 #include "host/wasi/inode.h"
@@ -73,14 +73,11 @@ constexpr int openFlags(__wasi_oflags_t OpenFlags, __wasi_fdflags_t FdFlags,
   if (OpenFlags & __WASI_OFLAGS_EXCL) {
     Flags |= O_EXCL;
   }
-  if (OpenFlags & __WASI_OFLAGS_TRUNC) {
+  if ((OpenFlags & __WASI_OFLAGS_TRUNC) && (VFSFlags & VFS::Write)) {
     Flags |= O_TRUNC;
   }
 
   // Convert file descriptor flags.
-  if ((FdFlags & __WASI_FDFLAGS_APPEND) != 0) {
-    Flags |= O_APPEND;
-  }
   if ((FdFlags & (__WASI_FDFLAGS_DSYNC | __WASI_FDFLAGS_RSYNC |
                   __WASI_FDFLAGS_SYNC)) != 0) {
     Flags |= O_SYNC;
@@ -142,7 +139,7 @@ WasiExpect<INode> INode::open(std::string Path, __wasi_oflags_t OpenFlags,
   if (auto NewFd = ::open(Path.c_str(), Flags, 0644); unlikely(NewFd < 0)) {
     return WasiUnexpect(fromErrNo(errno));
   } else {
-    return INode(NewFd);
+    return INode(NewFd, true, FdFlags & __WASI_FDFLAGS_APPEND);
   }
 }
 
@@ -207,7 +204,7 @@ WasiExpect<void> INode::fdFdstatGet(__wasi_fdstat_t &FdStat) const noexcept {
     FdStat.fs_filetype = unsafeFiletype();
 
     FdStat.fs_flags = static_cast<__wasi_fdflags_t>(0);
-    if (FdFlags & O_APPEND) {
+    if (Append) {
       FdStat.fs_flags |= __WASI_FDFLAGS_APPEND;
     }
     if (FdFlags & O_DSYNC) {
@@ -230,9 +227,6 @@ INode::fdFdstatSetFlags(__wasi_fdflags_t FdFlags) const noexcept {
   if (FdFlags & __WASI_FDFLAGS_NONBLOCK) {
     SysFlag |= O_NONBLOCK;
   }
-  if (FdFlags & __WASI_FDFLAGS_APPEND) {
-    SysFlag |= O_APPEND;
-  }
   if (FdFlags & __WASI_FDFLAGS_DSYNC) {
     SysFlag |= O_DSYNC;
   }
@@ -247,6 +241,7 @@ INode::fdFdstatSetFlags(__wasi_fdflags_t FdFlags) const noexcept {
     return WasiUnexpect(fromErrNo(errno));
   }
 
+  Append = FdFlags & __WASI_FDFLAGS_APPEND;
   return {};
 }
 
@@ -546,6 +541,10 @@ WasiExpect<void> INode::fdWrite(Span<Span<const uint8_t>> IOVs,
     ++SysIOVsSize;
   }
 
+  if (Append) {
+    ::lseek(Fd, 0, SEEK_END);
+  }
+
   if (auto Res = ::writev(Fd, SysIOVs, SysIOVsSize); unlikely(Res < 0)) {
     return WasiUnexpect(fromErrNo(errno));
   } else {
@@ -697,7 +696,7 @@ WasiExpect<INode> INode::pathOpen(std::string Path, __wasi_oflags_t OpenFlags,
       unlikely(NewFd < 0)) {
     return WasiUnexpect(fromErrNo(errno));
   } else {
-    return INode(NewFd);
+    return INode(NewFd, true, FdFlags & __WASI_FDFLAGS_APPEND);
   }
 }
 

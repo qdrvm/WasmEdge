@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 //===-- wasmedge/executor/executor.h - Executor class definition ----------===//
 //
@@ -152,6 +152,14 @@ public:
   Expect<std::unique_ptr<Runtime::Instance::ModuleInstance>>
   instantiateModule(Runtime::StoreManager &StoreMgr, const AST::Module &Mod);
 
+  Expect<std::unique_ptr<Runtime::Instance::ComponentInstance>>
+  instantiateComponent(Runtime::StoreManager &StoreMgr,
+                       const AST::Component::Component &Comp);
+  Expect<std::unique_ptr<Runtime::Instance::ComponentInstance>>
+  instantiateComponent(Runtime::StoreManager &StoreMgr,
+                       const AST::Component::Component &Comp,
+                       std::string_view Name);
+
   /// Instantiate and register a WASM module into a named module instance.
   Expect<std::unique_ptr<Runtime::Instance::ModuleInstance>>
   registerModule(Runtime::StoreManager &StoreMgr, const AST::Module &Mod,
@@ -160,6 +168,9 @@ public:
   /// Register an instantiated module into a named module instance.
   Expect<void> registerModule(Runtime::StoreManager &StoreMgr,
                               const Runtime::Instance::ModuleInstance &ModInst);
+  Expect<void>
+  registerComponent(Runtime::StoreManager &StoreMgr,
+                    const Runtime::Instance::ComponentInstance &CompInst);
 
   /// Register a host function which will be invoked before calling a
   /// host function.
@@ -231,6 +242,10 @@ private:
   Expect<void> instantiate(Runtime::Instance::ModuleInstance &ModInst,
                            const AST::MemorySection &MemSec);
 
+  /// Instantiateion of Tag Instances.
+  Expect<void> instantiate(Runtime::Instance::ModuleInstance &ModInst,
+                           const AST::TagSection &TagSec);
+
   /// Instantiation of Global Instances.
   Expect<void> instantiate(Runtime::StackManager &StackMgr,
                            Runtime::Instance::ModuleInstance &ModInst,
@@ -259,6 +274,57 @@ private:
                            const AST::ExportSection &ExportSec);
   /// @}
 
+  /// @{
+  /// Instantiation of Component Instance.
+  Expect<std::unique_ptr<Runtime::Instance::ComponentInstance>>
+  instantiate(Runtime::StoreManager &StoreMgr,
+              const AST::Component::Component &Comp,
+              std::optional<std::string_view> Name = std::nullopt);
+
+  Expect<void> instantiate(Runtime::StoreManager &StoreMgr,
+                           Runtime::Instance::ComponentInstance &CompInst,
+                           const AST::Component::CoreInstanceSection &);
+  Expect<void> instantiate(Runtime::StoreManager &StoreMgr,
+                           Runtime::Instance::ComponentInstance &CompInst,
+                           const AST::Component::CoreTypeSection &);
+  Expect<void> instantiate(Runtime::StoreManager &StoreMgr,
+                           Runtime::Instance::ComponentInstance &CompInst,
+                           const AST::Component::InstanceSection &);
+  Expect<void> instantiate(Runtime::StoreManager &StoreMgr,
+                           Runtime::Instance::ComponentInstance &CompInst,
+                           const AST::Component::AliasSection &);
+  Expect<void> instantiate(Runtime::StoreManager &StoreMgr,
+                           Runtime::Instance::ComponentInstance &CompInst,
+                           const AST::Component::TypeSection &);
+  Expect<void> instantiate(Runtime::StoreManager &StoreMgr,
+                           Runtime::Instance::ComponentInstance &CompInst,
+                           const AST::Component::CanonSection &);
+  Expect<void> instantiate(Runtime::StoreManager &StoreMgr,
+                           Runtime::Instance::ComponentInstance &CompInst,
+                           const AST::Component::StartSection &);
+  Expect<void> instantiate(Runtime::StoreManager &StoreMgr,
+                           Runtime::Instance::ComponentInstance &CompInst,
+                           const AST::Component::ImportSection &);
+  Expect<void> instantiate(Runtime::StoreManager &StoreMgr,
+                           Runtime::Instance::ComponentInstance &CompInst,
+                           const AST::Component::ExportSection &);
+  /// @}
+
+  /// \name Helper Functions for canonical ABI
+  /// @{
+  std::unique_ptr<Runtime::Instance::FunctionInstance>
+  lifting(Runtime::Instance::ComponentInstance &Comp,
+          const WasmEdge::AST::Component::FuncType &FuncType,
+          Runtime::Instance::FunctionInstance *F,
+          Runtime::Instance::MemoryInstance *Memory,
+          Runtime::Instance::FunctionInstance *Realloc);
+
+  std::unique_ptr<Runtime::Instance::FunctionInstance>
+  lowering(Runtime::Instance::FunctionInstance *F,
+           Runtime::Instance::MemoryInstance *Memory,
+           Runtime::Instance::FunctionInstance *Realloc);
+  /// @}
+
   /// \name Helper Functions for block controls.
   /// @{
   /// Helper function for calling functions. Return the continuation iterator.
@@ -269,26 +335,21 @@ private:
 
   /// Helper function for branching to label.
   Expect<void> branchToLabel(Runtime::StackManager &StackMgr,
-                             uint32_t EraseBegin, uint32_t EraseEnd,
-                             int32_t PCOffset,
+                             const AST::Instruction::JumpDescriptor &JumpDesc,
                              AST::InstrView::iterator &PC) noexcept;
+
+  /// Helper function for throwing an exception.
+  Expect<void> throwException(Runtime::StackManager &StackMgr,
+                              Runtime::Instance::TagInstance &TagInst,
+                              AST::InstrView::iterator &PC) noexcept;
   /// @}
 
-  /// \name Helper Functions for matching value types.
+  /// \name Helper Functions for getting instances or types.
   /// @{
-  bool matchType(const Runtime::Instance::ModuleInstance &ModExp,
-                 const ValType &Exp,
-                 const Runtime::Instance::ModuleInstance &ModGot,
-                 const ValType &Got) const noexcept;
+  /// Helper function for get defined type by index.
+  const AST::SubType *getDefTypeByIdx(Runtime::StackManager &StackMgr,
+                                      const uint32_t Idx) const;
 
-  bool matchTypes(const Runtime::Instance::ModuleInstance &ModExp,
-                  Span<const ValType> Exp,
-                  const Runtime::Instance::ModuleInstance &ModGot,
-                  Span<const ValType> Got) const noexcept;
-  /// @}
-
-  /// \name Helper Functions for getting instances.
-  /// @{
   /// Helper function for get function instance by index.
   Runtime::Instance::FunctionInstance *
   getFuncInstByIdx(Runtime::StackManager &StackMgr, const uint32_t Idx) const;
@@ -301,6 +362,10 @@ private:
   Runtime::Instance::MemoryInstance *
   getMemInstByIdx(Runtime::StackManager &StackMgr, const uint32_t Idx) const;
 
+  /// Helper function for get tag instance by index.
+  Runtime::Instance::TagInstance *
+  getTagInstByIdx(Runtime::StackManager &StackMgr, const uint32_t Idx) const;
+
   /// Helper function for get global instance by index.
   Runtime::Instance::GlobalInstance *
   getGlobInstByIdx(Runtime::StackManager &StackMgr, const uint32_t Idx) const;
@@ -312,6 +377,13 @@ private:
   /// Helper function for get data instance by index.
   Runtime::Instance::DataInstance *
   getDataInstByIdx(Runtime::StackManager &StackMgr, const uint32_t Idx) const;
+
+  /// Helper function for converting into bottom abstract heap type.
+  TypeCode toBottomType(Runtime::StackManager &StackMgr,
+                        const ValType &Type) const;
+
+  /// Helper function for clean the unused bits of numeric values in ValVariant.
+  void cleanNumericVal(ValVariant &Val, const ValType &Type) const noexcept;
   /// @}
 
   /// \name Run instructions functions
@@ -320,21 +392,31 @@ private:
   Expect<void> runIfElseOp(Runtime::StackManager &StackMgr,
                            const AST::Instruction &Instr,
                            AST::InstrView::iterator &PC) noexcept;
+  Expect<void> runThrowOp(Runtime::StackManager &StackMgr,
+                          const AST::Instruction &Instr,
+                          AST::InstrView::iterator &PC) noexcept;
+  Expect<void> runThrowRefOp(Runtime::StackManager &StackMgr,
+                             const AST::Instruction &Instr,
+                             AST::InstrView::iterator &PC) noexcept;
   Expect<void> runBrOp(Runtime::StackManager &StackMgr,
                        const AST::Instruction &Instr,
                        AST::InstrView::iterator &PC) noexcept;
   Expect<void> runBrIfOp(Runtime::StackManager &StackMgr,
                          const AST::Instruction &Instr,
                          AST::InstrView::iterator &PC) noexcept;
-  Expect<void> runBrOnNull(Runtime::StackManager &StackMgr,
-                           const AST::Instruction &Instr,
-                           AST::InstrView::iterator &PC) noexcept;
-  Expect<void> runBrOnNonNull(Runtime::StackManager &StackMgr,
-                              const AST::Instruction &Instr,
-                              AST::InstrView::iterator &PC) noexcept;
+  Expect<void> runBrOnNullOp(Runtime::StackManager &StackMgr,
+                             const AST::Instruction &Instr,
+                             AST::InstrView::iterator &PC) noexcept;
+  Expect<void> runBrOnNonNullOp(Runtime::StackManager &StackMgr,
+                                const AST::Instruction &Instr,
+                                AST::InstrView::iterator &PC) noexcept;
   Expect<void> runBrTableOp(Runtime::StackManager &StackMgr,
                             const AST::Instruction &Instr,
                             AST::InstrView::iterator &PC) noexcept;
+  Expect<void> runBrOnCastOp(Runtime::StackManager &StackMgr,
+                             const AST::Instruction &Instr,
+                             AST::InstrView::iterator &PC,
+                             bool IsReverse = false) noexcept;
   Expect<void> runReturnOp(Runtime::StackManager &StackMgr,
                            AST::InstrView::iterator &PC) noexcept;
   Expect<void> runCallOp(Runtime::StackManager &StackMgr,
@@ -349,6 +431,9 @@ private:
                                  const AST::Instruction &Instr,
                                  AST::InstrView::iterator &PC,
                                  bool IsTailCall = false) noexcept;
+  Expect<void> runTryTableOp(Runtime::StackManager &StackMgr,
+                             const AST::Instruction &Instr,
+                             AST::InstrView::iterator &PC) noexcept;
   /// ======= Variable instructions =======
   Expect<void> runLocalGetOp(Runtime::StackManager &StackMgr,
                              uint32_t StackOffset) const noexcept;
@@ -360,6 +445,76 @@ private:
                               uint32_t Idx) const noexcept;
   Expect<void> runGlobalSetOp(Runtime::StackManager &StackMgr,
                               uint32_t Idx) const noexcept;
+  /// ======= Reference instructions =======
+  Expect<void> runRefNullOp(Runtime::StackManager &StackMgr,
+                            const ValType &Type) const noexcept;
+  Expect<void> runRefIsNullOp(ValVariant &Val) const noexcept;
+  Expect<void> runRefFuncOp(Runtime::StackManager &StackMgr,
+                            uint32_t Idx) const noexcept;
+  Expect<void> runRefEqOp(ValVariant &Val1,
+                          const ValVariant &Val2) const noexcept;
+  Expect<void> runRefAsNonNullOp(RefVariant &Val,
+                                 const AST::Instruction &Instr) const noexcept;
+  Expect<void> runStructNewOp(Runtime::StackManager &StackMgr,
+                              const uint32_t DefIndex,
+                              bool IsDefault = false) const noexcept;
+  Expect<void> runStructGetOp(ValVariant &Val, const uint32_t Idx,
+                              const AST::CompositeType &CompType,
+                              const AST::Instruction &Instr,
+                              bool IsSigned = false) const noexcept;
+  Expect<void> runStructSetOp(const ValVariant &Val, const RefVariant &InstRef,
+                              const AST::CompositeType &CompType, uint32_t Idx,
+                              const AST::Instruction &Instr) const noexcept;
+  Expect<void> runArrayNewOp(Runtime::StackManager &StackMgr,
+                             const uint32_t DefIndex, uint32_t InitCnt,
+                             uint32_t ValCnt) const noexcept;
+  Expect<void>
+  runArrayNewDataOp(Runtime::StackManager &StackMgr,
+                    const Runtime::Instance::DataInstance &DataInst,
+                    const AST::Instruction &Instr) const noexcept;
+  Expect<void>
+  runArrayNewElemOp(Runtime::StackManager &StackMgr,
+                    const Runtime::Instance::ElementInstance &ElemInst,
+                    const AST::Instruction &Instr) const noexcept;
+  Expect<void> runArraySetOp(const ValVariant &Val, const uint32_t Idx,
+                             const RefVariant &InstRef,
+                             const AST::CompositeType &CompType,
+                             const AST::Instruction &Instr) const noexcept;
+  Expect<void> runArrayGetOp(ValVariant &Val, const uint32_t Idx,
+                             const AST::CompositeType &CompType,
+                             const AST::Instruction &Instr,
+                             bool IsSigned = false) const noexcept;
+  Expect<void> runArrayLenOp(ValVariant &Val,
+                             const AST::Instruction &Instr) const noexcept;
+  Expect<void> runArrayFillOp(uint32_t N, const ValVariant &Val, uint32_t D,
+                              const RefVariant &InstRef,
+                              const AST::CompositeType &CompType,
+                              const AST::Instruction &Instr) const noexcept;
+  Expect<void> runArrayCopyOp(uint32_t N, uint32_t S,
+                              const RefVariant &SrcInstRef, uint32_t D,
+                              const RefVariant &DstInstRef,
+                              const AST::CompositeType &SrcCompType,
+                              const AST::CompositeType &DstCompType,
+                              const AST::Instruction &Instr) const noexcept;
+  Expect<void>
+  runArrayInitDataOp(uint32_t N, uint32_t S, uint32_t D,
+                     const RefVariant &InstRef,
+                     const AST::CompositeType &CompType,
+                     const Runtime::Instance::DataInstance &DataInst,
+                     const AST::Instruction &Instr) const noexcept;
+  Expect<void>
+  runArrayInitElemOp(uint32_t N, uint32_t S, uint32_t D,
+                     const RefVariant &InstRef,
+                     const AST::CompositeType &CompType,
+                     const Runtime::Instance::ElementInstance &ElemInst,
+                     const AST::Instruction &Instr) const noexcept;
+  Expect<void> runRefTestOp(const Runtime::Instance::ModuleInstance *ModInst,
+                            ValVariant &Val, const AST::Instruction &Instr,
+                            bool IsCast = false) const noexcept;
+  Expect<void> runRefConvOp(RefVariant &Val, TypeCode TCode) const noexcept;
+  Expect<void> runRefI31Op(ValVariant &Val) const noexcept;
+  Expect<void> runI31GetOp(ValVariant &Val, const AST::Instruction &Instr,
+                           bool IsSigned = false) const noexcept;
   /// ======= Table instructions =======
   Expect<void> runTableGetOp(Runtime::StackManager &StackMgr,
                              Runtime::Instance::TableInstance &TabInst,
@@ -584,6 +739,17 @@ private:
   template <typename T> Expect<void> runVectorFloorOp(ValVariant &Val) const;
   template <typename T> Expect<void> runVectorTruncOp(ValVariant &Val) const;
   template <typename T> Expect<void> runVectorNearestOp(ValVariant &Val) const;
+
+  /// ======= Relaxed SIMD instructions =======
+  template <typename T>
+  Expect<void> runVectorRelaxedLaneselectOp(ValVariant &Val1,
+                                            const ValVariant &Val2,
+                                            const ValVariant &Mask) const;
+  inline Expect<void>
+  runVectorRelaxedIntegerDotProductOp(ValVariant &Val1,
+                                      const ValVariant &Val2) const;
+  inline Expect<void> runVectorRelaxedIntegerDotProductOpAdd(
+      ValVariant &Val1, const ValVariant &Val2, const ValVariant &C) const;
   /// ======= Atomic instructions =======
   Expect<void> runAtomicNotifyOp(Runtime::StackManager &StackMgr,
                                  Runtime::Instance::MemoryInstance &MemInst,
@@ -706,7 +872,7 @@ public:
   template <typename FuncPtr> struct ProxyHelper;
 
   /// Callbacks for compiled modules
-  static const AST::Module::IntrinsicsTable Intrinsics;
+  static const Executable::IntrinsicsTable Intrinsics;
 
 private:
   template <typename T>

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "loader/loader.h"
 
@@ -66,6 +66,15 @@ Expect<void> Loader::loadDesc(AST::ImportDesc &ImpDesc) {
     }
     return {};
   }
+  case ExternalType::Tag: {
+    if (!Conf.hasProposal(Proposal::ExceptionHandling)) {
+      return logNeedProposal(ErrCode::Value::MalformedImportKind,
+                             Proposal::ExceptionHandling, FMgr.getLastOffset(),
+                             ASTNodeAttr::Module);
+    }
+    // Read the Tag type node.
+    return loadType(ImpDesc.getExternalTagType());
+  }
   default:
     return logLoadError(ErrCode::Value::MalformedImportKind,
                         FMgr.getLastOffset(), ASTNodeAttr::Desc_Import);
@@ -95,6 +104,13 @@ Expect<void> Loader::loadDesc(AST::ExportDesc &ExpDesc) {
   case ExternalType::Table:
   case ExternalType::Memory:
   case ExternalType::Global:
+    break;
+  case ExternalType::Tag:
+    if (!Conf.hasProposal(Proposal::ExceptionHandling)) {
+      return logNeedProposal(ErrCode::Value::MalformedImportKind,
+                             Proposal::ExceptionHandling, FMgr.getLastOffset(),
+                             ASTNodeAttr::Module);
+    }
     break;
   default:
     return logLoadError(ErrCode::Value::MalformedExportKind,

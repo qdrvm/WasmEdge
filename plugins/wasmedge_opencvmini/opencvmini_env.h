@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2023 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #pragma once
 
@@ -15,8 +15,6 @@ namespace Host {
 class WasmEdgeOpenCVMiniEnvironment {
 public:
   WasmEdgeOpenCVMiniEnvironment() noexcept;
-
-  static Plugin::PluginRegister Register;
 
   std::map<uint32_t, cv::Mat> MatPool;
 

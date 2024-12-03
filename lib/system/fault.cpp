@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "system/fault.h"
 
 #include "common/config.h"
 #include "common/defines.h"
-#include "common/log.h"
+#include "common/spdlog.h"
 
 #include <atomic>
 #include <csetjmp>
@@ -25,8 +25,7 @@ std::atomic_uint handlerCount = 0;
 thread_local Fault *localHandler = nullptr;
 
 #if defined(SA_SIGINFO)
-[[noreturn]] void signalHandler(int Signal, siginfo_t *Siginfo [[maybe_unused]],
-                                void *) noexcept {
+void signalHandler(int Signal, siginfo_t *Siginfo, void *) {
   {
     // Unblock current signal
     sigset_t Set;

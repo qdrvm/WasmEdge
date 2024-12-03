@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 //===-- wasmedge/common/enum_errcode.h - Error code C++ enumerations ------===//
 //
@@ -14,9 +14,9 @@
 
 #pragma once
 
-#include "dense_enum_map.h"
-#include "log.h"
-#include "spare_enum_map.h"
+#include "common/dense_enum_map.h"
+#include "common/spare_enum_map.h"
+#include "common/spdlog.h"
 
 #include <cstdint>
 #include <string_view>

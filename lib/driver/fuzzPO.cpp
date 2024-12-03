@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #ifdef WASMEDGE_BUILD_FUZZING
 #include "driver/fuzzPO.h"
-#include "common/log.h"
+#include "common/spdlog.h"
 #include "common/version.h"
 #include "po/argument_parser.h"
 
 #include <algorithm>
 #include <array>
 #include <cstdio>
-#include <iostream>
 #include <type_traits>
 #include <utility>
 #include <vector>
+
 namespace {
 template <class Key, class Value, class Hash, class BinaryPredicate>
 class SkipTable {

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 //===-- wasmedge/test/api/helper.cpp - Spec test helpers for C API --------===//
 //
@@ -23,9 +23,10 @@
 namespace WasmEdge {
 
 static Proposal ProposalList[] = {
-    Proposal::TailCall, Proposal::MultiMemories,     Proposal::Annotations,
-    Proposal::Memory64, Proposal::ExceptionHandling, Proposal::ExtendedConst,
-    Proposal::Threads,  Proposal::FunctionReferences};
+    Proposal::TailCall, Proposal::MultiMemories,      Proposal::Annotations,
+    Proposal::Memory64, Proposal::ExceptionHandling,  Proposal::ExtendedConst,
+    Proposal::Threads,  Proposal::FunctionReferences, Proposal::GC,
+    Proposal::RelaxSIMD};
 
 WasmEdge_ConfigureContext *createConf(const Configure &Conf) {
   auto *Cxt = WasmEdge_ConfigureCreate();
