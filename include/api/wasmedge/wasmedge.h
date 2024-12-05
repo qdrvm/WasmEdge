@@ -1790,6 +1790,11 @@ WasmEdge_LoaderSerializeASTModule(WasmEdge_LoaderContext *Cxt,
                                   const WasmEdge_ASTModuleContext *ASTCxt,
                                   WasmEdge_Bytes *Buf);
 
+WASMEDGE_CAPI_EXPORT extern WasmEdge_Result
+WasmEdge_LoaderPrepareForJIT(WasmEdge_LoaderContext *Ctx,
+                             WasmEdge_ASTModuleContext *ASTCxt,
+                             const WasmEdge_ConfigureContext *ConfCxt);
+
 /// Deletion of the WasmEdge_LoaderContext.
 ///
 /// After calling this function, the context will be destroyed and should
@@ -4176,6 +4181,33 @@ WasmEdge_ExecutorExperimentalRegisterPostHostFunction(
     WasmEdge_ExecutorContext *Cxt, void *Data, void (*Func)(void *));
 
 // <<<<<<<< WasmEdge Experimental Functions <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+// >>>>>>>> [qdrvm] >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+typedef struct WasmEdge_DataSegment {
+  uint32_t Offset;
+  const uint8_t *Data;
+  uint32_t Length;
+} WasmEdge_DataSegment;
+
+/// List the data section of the AST module.
+///
+/// If the `Segments` buffer length is smaller than the result of the data
+/// section size, the overflowed return values will be discarded.
+///
+/// \param Cxt the WasmEdge_ASTModuleContext.
+/// \param [out] Segments the data segment buffer. Can be NULL if data segments
+/// are not needed.
+/// \param Len the buffer length.
+///
+/// \returns actual data segment list size.
+WASMEDGE_CAPI_EXPORT extern uint32_t
+WasmEdge_ASTModuleListDataSegments(const WasmEdge_ASTModuleContext *Cxt,
+                                   WasmEdge_DataSegment *Segments,
+                                   const uint32_t Len);
+
+// <<<<<<<< [qdrvm] <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 #ifdef __cplusplus
 } /// extern "C"
 #endif
