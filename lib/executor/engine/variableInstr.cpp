@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "executor/executor.h"
 
@@ -39,7 +39,7 @@ Expect<void> Executor::runGlobalSetOp(Runtime::StackManager &StackMgr,
                                       uint32_t Idx) const noexcept {
   auto *GlobInst = getGlobInstByIdx(StackMgr, Idx);
   assuming(GlobInst);
-  GlobInst->getValue() = StackMgr.pop();
+  GlobInst->setValue(StackMgr.pop());
   return {};
 }
 

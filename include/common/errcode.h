@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 //===-- wasmedge/common/errcode.h - Error code definition -----------------===//
 //
@@ -16,7 +16,7 @@
 #include "common/enum_errcode.hpp"
 #include "common/expected.h"
 #include "common/hexstr.h"
-#include "common/log.h"
+#include "common/spdlog.h"
 
 #include <cassert>
 #include <ostream>

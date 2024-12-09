@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 /**
  * THIS FILE IS AUTO-GENERATED from the following files:
@@ -400,7 +400,7 @@ static_assert(alignof(__wasi_algorithm_type_e_t) == 2, "witx calculated align");
 /**
  * Version of a managed key.
  * 
- * A version can be an arbitrary `u64` integer, with the expection of some reserved values.
+ * A version can be an arbitrary `u64` integer, with the exception of some reserved values.
  */
 using __wasi_version_t = uint64_t;
 
@@ -544,7 +544,7 @@ static_assert(alignof(__wasi_symmetric_key_t) == 4, "witx calculated align");
  * 
  * This object type can't be directly created from raw bytes. They are only returned by functions computing MACs.
  * 
- * The host is reponsible for securely wiping them from memory on close.
+ * The host is responsible for securely wiping them from memory on close.
  */
 using __wasi_symmetric_tag_t = int32_t;
 
@@ -673,4 +673,3 @@ using __wasi_signature_secretkey_t = __wasi_secretkey_t;
 
 static_assert(sizeof(__wasi_signature_secretkey_t) == 4, "witx calculated size");
 static_assert(alignof(__wasi_signature_secretkey_t) == 4, "witx calculated align");
-

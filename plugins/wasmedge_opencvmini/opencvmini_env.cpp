@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2023 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "opencvmini_env.h"
 #include "opencvmini_module.h"
@@ -33,9 +33,8 @@ Plugin::Plugin::PluginDescriptor Descriptor{
     .AddOptions = nullptr,
 };
 
+EXPORT_GET_DESCRIPTOR(Descriptor)
+
 } // namespace
-
-Plugin::PluginRegister WasmEdgeOpenCVMiniEnvironment::Register(&Descriptor);
-
 } // namespace Host
 } // namespace WasmEdge

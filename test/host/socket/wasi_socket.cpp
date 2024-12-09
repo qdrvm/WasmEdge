@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "common/defines.h"
 #include "executor/executor.h"
@@ -9,12 +9,12 @@
 #include "system/winapi.h"
 #include <algorithm>
 #include <array>
+#include <climits>
 #include <cstdint>
 #include <cstring>
 #include <gtest/gtest.h>
 #include <string>
 #include <string_view>
-#include <climits>
 
 #if !WASMEDGE_OS_WINDOWS
 #include <netinet/in.h>

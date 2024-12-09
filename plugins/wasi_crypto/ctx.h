@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 //===-- wasmedge/plugins/wasi_crypto/ctx.h - Context class definition -----===//
 //
@@ -358,7 +358,6 @@ private:
 
   static std::shared_mutex Mutex;
   static std::weak_ptr<Context> Instance;
-  static Plugin::PluginRegister Register;
 };
 
 } // namespace WasiCrypto

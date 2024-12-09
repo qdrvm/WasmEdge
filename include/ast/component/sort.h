@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2023 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 //===-- wasmedge/ast/component/sort.h - sort class definitions ------------===//
 //
@@ -32,7 +32,6 @@ enum class CoreSort : Byte {
   Instance = 0x12,
 };
 enum class SortCase : Byte {
-  CoreInstance,
   Func = 0x01,
   Value = 0x02,
   Type = 0x03,

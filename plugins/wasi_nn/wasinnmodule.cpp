@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "wasinnmodule.h"
 #include "wasinnfunc.h"
@@ -21,6 +21,7 @@ WasiNNModule::WasiNNModule() : ModuleInstance("wasi_ephemeral_nn") {
   addHostFunc("compute", std::make_unique<WasiNNCompute>(Env));
   addHostFunc("compute_single", std::make_unique<WasiNNComputeSingle>(Env));
   addHostFunc("fini_single", std::make_unique<WasiNNFiniSingle>(Env));
+  addHostFunc("unload", std::make_unique<WasiNNUnload>(Env));
 }
 
 } // namespace Host

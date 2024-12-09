@@ -89,9 +89,10 @@ private:
   Runtime::CallingFrame Frame;
 };
 
-grpc::Status createRPCStatusFromErrno(std::string_view FuncName,
+grpc::Status createRPCStatusFromErrno(grpc::ServerContext *RPCContext,
+                                      std::string_view FuncName,
                                       uint32_t Errno) {
-  // TODO: propagate Errno as gRPC metadata for machine-readability
+  RPCContext->AddTrailingMetadata("errno", std::to_string(Errno));
   return grpc::Status(
       grpc::StatusCode::UNKNOWN,
       fmt::format("failed to call host function \"{}\", errno={}"sv, FuncName,
@@ -108,13 +109,14 @@ public:
     NamePtr, uint32_t NameLen, uint32_t GraphIdPtr)
   */
   virtual grpc::Status
-  LoadByName(grpc::ServerContext * /*RPCContext*/,
+  LoadByName(grpc::ServerContext *RPCContext,
              const wasi_ephemeral_nn::LoadByNameRequest *RPCRequest,
              wasi_ephemeral_nn::LoadByNameResult *RPCResult) {
     std::string_view FuncName = "load_by_name"sv;
     auto Name = RPCRequest->name();
     uint32_t NamePtr = UINT32_C(0);
-    uint32_t NameLen = Name.size(); // does not include the '\0' terminator
+    uint32_t NameLen = static_cast<uint32_t>(
+        Name.size()); // does not include the '\0' terminator
     uint32_t OutPtr = NamePtr + NameLen + 1; // 1 is for the '\0' terminator
     uint32_t MemorySize = OutPtr + 4;        // 4 is for sizeof(OutPtr)
 
@@ -124,7 +126,49 @@ public:
     writeBinaries(MemInst, NameVec, NamePtr);
     uint32_t Errno = HostFuncCaller.call({NamePtr, NameLen, OutPtr});
     if (Errno != 0) {
-      return createRPCStatusFromErrno(FuncName, Errno);
+      return createRPCStatusFromErrno(RPCContext, FuncName, Errno);
+    }
+    uint32_t GraphHandle = *MemInst.getPointer<uint32_t *>(OutPtr);
+    RPCResult->set_graph_handle(GraphHandle);
+    return grpc::Status::OK;
+  }
+
+  /*
+    Expect<WASINN::ErrNo>
+    WasiNNLoadByNameWithConfig::bodyImpl(
+      const Runtime::CallingFrame &Frame,
+      uint32_t NamePtr, uint32_t NameLen,
+      uint32_t ConfigPtr, uint32_t ConfigLen,
+      uint32_t GraphIdPtr
+    )
+  */
+  virtual grpc::Status LoadByNameWithConfig(
+      grpc::ServerContext *RPCContext,
+      const wasi_ephemeral_nn::LoadByNameWithConfigRequest *RPCRequest,
+      wasi_ephemeral_nn::LoadByNameWithConfigResult *RPCResult) {
+    std::string_view FuncName = "load_by_name_with_config"sv;
+    auto Name = RPCRequest->name();
+    auto Config = RPCRequest->config();
+    uint32_t NamePtr = UINT32_C(0);
+    uint32_t NameLen = static_cast<uint32_t>(
+        Name.size()); // does not include the '\0' terminator
+    uint32_t ConfigPtr = static_cast<uint32_t>(
+        Name.size() + 1);               // 1 is for the '\0' terminator of Name
+    uint32_t ConfigLen = Config.size(); // does not include the '\0' terminator
+    uint32_t OutPtr =
+        NamePtr + NameLen + 1 + ConfigLen + 1; // 1 is for the '\0' terminator
+    uint32_t MemorySize = OutPtr + 4;          // 4 is for sizeof(OutPtr)
+
+    HostFuncCaller HostFuncCaller(NNMod, FuncName, MemorySize);
+    auto &MemInst = HostFuncCaller.getMemInst();
+    std::vector<char> NameVec(Name.begin(), Name.end());
+    std::vector<char> ConfigVec(Config.begin(), Config.end());
+    writeBinaries(MemInst, NameVec, NamePtr);
+    writeBinaries(MemInst, ConfigVec, ConfigPtr);
+    uint32_t Errno =
+        HostFuncCaller.call({NamePtr, NameLen, ConfigPtr, ConfigLen, OutPtr});
+    if (Errno != 0) {
+      return createRPCStatusFromErrno(RPCContext, FuncName, Errno);
     }
     uint32_t GraphHandle = *MemInst.getPointer<uint32_t *>(OutPtr);
     RPCResult->set_graph_handle(GraphHandle);
@@ -145,7 +189,7 @@ public:
                               uint32_t &ContextId) noexcept
   */
   virtual grpc::Status InitExecutionContext(
-      grpc::ServerContext * /*RPCContext*/,
+      grpc::ServerContext *RPCContext,
       const wasi_ephemeral_nn::InitExecutionContextRequest *RPCRequest,
       wasi_ephemeral_nn::InitExecutionContextResult *RPCResult) {
     std::string_view FuncName = "init_execution_context"sv;
@@ -157,7 +201,7 @@ public:
     auto &MemInst = HostFuncCaller.getMemInst();
     uint32_t Errno = HostFuncCaller.call({ResourceHandle, OutPtr});
     if (Errno != 0) {
-      return createRPCStatusFromErrno(FuncName, Errno);
+      return createRPCStatusFromErrno(RPCContext, FuncName, Errno);
     }
     uint32_t CtxHandle = *MemInst.getPointer<uint32_t *>(OutPtr);
     RPCResult->set_ctx_handle(CtxHandle);
@@ -180,7 +224,7 @@ public:
                            uint32_t Index, const TensorData &Tensor) noexcept
   */
   virtual grpc::Status
-  SetInput(grpc::ServerContext * /*RPCContext*/,
+  SetInput(grpc::ServerContext *RPCContext,
            const wasi_ephemeral_nn::SetInputRequest *RPCRequest,
            google::protobuf::Empty * /*RPCResult*/) {
     std::string_view FuncName = "set_input"sv;
@@ -191,7 +235,7 @@ public:
     uint32_t TensorDimSize = TensorDim.size();
     uint32_t TensorTy = Tensor.ty();
     auto TensorData = Tensor.data();
-    uint32_t TensorDataSize = TensorData.size();
+    uint32_t TensorDataSize = static_cast<uint32_t>(TensorData.size());
 
     /* clang-format off */
     /**
@@ -221,7 +265,7 @@ public:
     uint32_t Errno =
         HostFuncCaller.call({ResourceHandle, Index, SetInputEntryPtr});
     if (Errno != 0) {
-      return createRPCStatusFromErrno(FuncName, Errno);
+      return createRPCStatusFromErrno(RPCContext, FuncName, Errno);
     }
     return grpc::Status::OK;
   }
@@ -230,7 +274,7 @@ public:
     Expect<ErrNo> compute(WasiNNEnvironment &Env, uint32_t ContextId) noexcept
   */
   virtual grpc::Status
-  Compute(grpc::ServerContext * /*RPCContext*/,
+  Compute(grpc::ServerContext *RPCContext,
           const wasi_ephemeral_nn::ComputeRequest *RPCRequest,
           google::protobuf::Empty * /*RPCResult*/) {
     std::string_view FuncName = "compute"sv;
@@ -239,7 +283,26 @@ public:
     HostFuncCaller HostFuncCaller(NNMod, FuncName, MemorySize);
     uint32_t Errno = HostFuncCaller.call({ResourceHandle});
     if (Errno != 0) {
-      return createRPCStatusFromErrno(FuncName, Errno);
+      return createRPCStatusFromErrno(RPCContext, FuncName, Errno);
+    }
+    return grpc::Status::OK;
+  }
+
+  /*
+    Expect<ErrNo> computeSingle(WasiNNEnvironment &Env, uint32_t ContextId)
+    noexcept
+  */
+  virtual grpc::Status
+  ComputeSingle(grpc::ServerContext *RPCContext,
+                const wasi_ephemeral_nn::ComputeRequest *RPCRequest,
+                google::protobuf::Empty * /*RPCResult*/) {
+    std::string_view FuncName = "compute_single"sv;
+    uint32_t ResourceHandle = RPCRequest->resource_handle();
+    uint32_t MemorySize = UINT32_C(0);
+    HostFuncCaller HostFuncCaller(NNMod, FuncName, MemorySize);
+    uint32_t Errno = HostFuncCaller.call({ResourceHandle});
+    if (Errno != 0) {
+      return createRPCStatusFromErrno(RPCContext, FuncName, Errno);
     }
     return grpc::Status::OK;
   }
@@ -250,7 +313,7 @@ public:
                             uint32_t &BytesWritten) noexcept
   */
   virtual grpc::Status
-  GetOutput(grpc::ServerContext * /*RPCContext*/,
+  GetOutput(grpc::ServerContext *RPCContext,
             const wasi_ephemeral_nn::GetOutputRequest *RPCRequest,
             wasi_ephemeral_nn::GetOutputResult *RPCResult) {
     std::string_view FuncName = "get_output"sv;
@@ -265,7 +328,7 @@ public:
     uint32_t Errno = HostFuncCaller.call(
         {ResourceHandle, Index, BufPtr, BufMaxSize, BytesWrittenPtr});
     if (Errno != 0) {
-      return createRPCStatusFromErrno(FuncName, Errno);
+      return createRPCStatusFromErrno(RPCContext, FuncName, Errno);
     }
     /* clang-format off */
     /**
@@ -276,6 +339,60 @@ public:
     auto BytesWritten = *MemInst.getPointer<uint32_t *>(BytesWrittenPtr);
     auto *Buf = MemInst.getPointer<char *>(BufPtr);
     RPCResult->set_data(Buf, BytesWritten);
+    return grpc::Status::OK;
+  }
+
+  /*
+    Expect<ErrNo> getOutputSingle(WasiNNEnvironment &Env, uint32_t ContextId,
+                                  uint32_t Index, Span<uint8_t> OutBuffer,
+                                  uint32_t &BytesWritten) noexcept
+  */
+  virtual grpc::Status
+  GetOutputSingle(grpc::ServerContext *RPCContext,
+                  const wasi_ephemeral_nn::GetOutputRequest *RPCRequest,
+                  wasi_ephemeral_nn::GetOutputResult *RPCResult) {
+    std::string_view FuncName = "get_output_single"sv;
+    uint32_t ResourceHandle = RPCRequest->resource_handle();
+    uint32_t Index = RPCRequest->index();
+    uint32_t MemorySize = UINT32_C(65536); // FIXME
+    uint32_t BytesWrittenPtr = UINT32_C(0);
+    uint32_t BufPtr = BytesWrittenPtr + UINT32_C(4);
+    uint32_t BufMaxSize = MemorySize - BufPtr;
+    HostFuncCaller HostFuncCaller(NNMod, FuncName, MemorySize);
+    auto &MemInst = HostFuncCaller.getMemInst();
+    uint32_t Errno = HostFuncCaller.call(
+        {ResourceHandle, Index, BufPtr, BufMaxSize, BytesWrittenPtr});
+    if (Errno != 0) {
+      return createRPCStatusFromErrno(RPCContext, FuncName, Errno);
+    }
+    /* clang-format off */
+    /**
+       0                    : BytesWritten
+       4                    : Buf
+    */
+    /* clang-format on */
+    auto BytesWritten = *MemInst.getPointer<uint32_t *>(BytesWrittenPtr);
+    auto *Buf = MemInst.getPointer<char *>(BufPtr);
+    RPCResult->set_data(Buf, BytesWritten);
+    return grpc::Status::OK;
+  }
+
+  /*
+    Expect<ErrNo> finiSingle(WasiNNEnvironment &Env, uint32_t ContextId)
+    noexcept
+  */
+  virtual grpc::Status
+  FiniSingle(grpc::ServerContext *RPCContext,
+             const wasi_ephemeral_nn::FiniSingleRequest *RPCRequest,
+             google::protobuf::Empty * /*RPCResult*/) {
+    std::string_view FuncName = "fini_single"sv;
+    uint32_t ResourceHandle = RPCRequest->resource_handle();
+    uint32_t MemorySize = UINT32_C(0);
+    HostFuncCaller HostFuncCaller(NNMod, FuncName, MemorySize);
+    uint32_t Errno = HostFuncCaller.call({ResourceHandle});
+    if (Errno != 0) {
+      return createRPCStatusFromErrno(RPCContext, FuncName, Errno);
+    }
     return grpc::Status::OK;
   }
 

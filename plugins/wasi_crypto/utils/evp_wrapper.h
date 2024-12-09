@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 //===-- wasmedge/plugins/wasi_crypto/utils/evp_wrapper.h - Evp Wrapper ----===//
 //
@@ -17,8 +17,8 @@
 #include "utils/error.h"
 #include "utils/secret_vec.h"
 
-#include "common/log.h"
 #include "common/span.h"
+#include "common/spdlog.h"
 
 #include <openssl/bio.h>
 #include <openssl/bn.h>
