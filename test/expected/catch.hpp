@@ -12478,7 +12478,7 @@ namespace Catch {
             }
             void close() override {
                 TrackerBase::close();
-                // Generator interface only finds out if it has another item on atual move
+                // Generator interface only finds out if it has another item on actual move
                 if (m_runState == CompletedSuccessfully && m_generator->next()) {
                     m_children.clear();
                     m_runState = Executing;
@@ -17612,4 +17612,3 @@ using Catch::Detail::Approx;
 // end catch_reenable_warnings.h
 // end catch.hpp
 #endif // TWOBLUECUBES_SINGLE_INCLUDE_CATCH_HPP_INCLUDED
-

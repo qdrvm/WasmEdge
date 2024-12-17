@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "wasm-bpf-module.h"
 #include "func-attach-bpf-program.h"
@@ -13,7 +13,6 @@
 #include "runtime/callingframe.h"
 #include "state.h"
 #include <algorithm>
-#include <iostream>
 
 namespace WasmEdge {
 namespace Host {
@@ -53,7 +52,7 @@ Plugin::Plugin::PluginDescriptor Descriptor{
         },
     .AddOptions = nullptr};
 
-Plugin::PluginRegister Register(&Descriptor);
+EXPORT_GET_DESCRIPTOR(Descriptor)
 
 } // namespace Host
 } // namespace WasmEdge

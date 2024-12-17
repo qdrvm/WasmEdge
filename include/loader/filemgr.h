@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 //===-- wasmedge/loader/filemgr.h - File Manager definition ---------------===//
 //
@@ -85,6 +85,9 @@ public:
 
   /// Read a string, which is size(unsigned int) + bytes.
   Expect<std::string> readName();
+
+  /// Peek one byte.
+  Expect<Byte> peekByte();
 
   /// Get the file header type.
   FileHeader getHeaderType();

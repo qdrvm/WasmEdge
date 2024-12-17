@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "image_env.h"
 #include "image_module.h"
@@ -32,9 +32,8 @@ Plugin::Plugin::PluginDescriptor Descriptor{
     .AddOptions = nullptr,
 };
 
+EXPORT_GET_DESCRIPTOR(Descriptor)
+
 } // namespace
-
-Plugin::PluginRegister WasmEdgeImage::ImgEnv::Register(&Descriptor);
-
 } // namespace Host
 } // namespace WasmEdge

@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "common/errinfo.h"
 #include "common/errcode.h"
 #include "common/hexstr.h"
+
+#include <spdlog/fmt/fmt.h>
+#include <spdlog/fmt/ranges.h>
 
 using namespace std::literals;
 
@@ -305,7 +308,7 @@ fmt::formatter<WasmEdge::ErrInfo::InfoProposal>::format(
       Iter != WasmEdge::ProposalStr.end()) {
     fmt::format_to(
         std::back_inserter(Buffer),
-        "    This instruction or syntax requires enabling proposal {}"sv,
+        "    This instruction or syntax requires enabling {} proposal"sv,
         Iter->second);
   } else {
     fmt::format_to(std::back_inserter(Buffer),

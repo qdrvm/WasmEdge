@@ -1,6 +1,6 @@
 #!/bin/bash
 # SPDX-License-Identifier: Apache-2.0
-# SPDX-FileCopyrightText: 2019-2022 Second State INC
+# SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 OHOS_DIR_PATH=$1
 WASMEDGE_ROOT_PATH=$(dirname $(dirname $(pwd)))
@@ -13,7 +13,7 @@ cd ${WASMEDGE_ROOT_PATH}
 
 mkdir build
 cd build
-if ! cmake .. -DCMAKE_BUILD_TYPE=Release -DWASMEDGE_BUILD_AOT_RUNTIME=OFF -DWASMEDGE_BUILD_ON_OHOS=ON -DOHOS_DIR_PATH=${OHOS_DIR_PATH} -DOHOS_SYSROOT_PATH="${OHOS_DIR_PATH}/out/ohos-arm-release/obj/third_party/musl/"; then
+if ! cmake .. -DCMAKE_BUILD_TYPE=Release -DWASMEDGE_USE_LLVM=OFF -DWASMEDGE_BUILD_ON_OHOS=ON -DOHOS_DIR_PATH=${OHOS_DIR_PATH} -DOHOS_SYSROOT_PATH="${OHOS_DIR_PATH}/out/ohos-arm-release/obj/third_party/musl/"; then
     echo === CMakeOutput.log ===
     cat build/CMakeFiles/CMakeOutput.log
     echo === CMakeError.log ===

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "common/defines.h"
 #include "executor/executor.h"
@@ -23,9 +23,9 @@
 namespace {
 WasmEdge::Runtime::Instance::ModuleInstance *createModule() {
   using namespace std::literals::string_view_literals;
-  WasmEdge::Plugin::Plugin::load(std::filesystem::u8path(
-      "../../../plugins/wasm_bpf/"
-      "libwasmedgePluginWasmBpf" WASMEDGE_LIB_EXTENSION));
+  WasmEdge::Plugin::Plugin::load(
+      std::filesystem::u8path("../../../plugins/wasm_bpf/" WASMEDGE_LIB_PREFIX
+                              "wasmedgePluginWasmBpf" WASMEDGE_LIB_EXTENSION));
   if (const auto *Plugin = WasmEdge::Plugin::Plugin::find("wasm_bpf"sv)) {
     if (const auto *Module = Plugin->findModule("wasm_bpf"sv)) {
       return Module->create().release();

@@ -1,4 +1,4 @@
-#include "common/log.h"
+#include "common/spdlog.h"
 #include "driver/wasi_nn_rpc/wasi_nn_rpcserver/wasi_nn_rpcserver.h"
 #include "plugin/plugin.h"
 #include "po/argument_parser.h"
@@ -13,16 +13,10 @@ namespace WasmEdge {
 namespace Driver {
 
 void loadPlugins(void) {
-  for (const auto &Path : Plugin::Plugin::getDefaultPluginPaths()) {
-    spdlog::info("Loading plugin path {}"sv, Path);
-    if (Plugin::Plugin::load(Path)) {
-      spdlog::info("Loaded plugin path {}"sv, Path);
-    } else {
-      spdlog::info("Nothing was loaded from plugin path {}"sv, Path);
-    }
-  }
+  Plugin::Plugin::loadFromDefaultPaths();
   for (const auto &Plugin : Plugin::Plugin::plugins()) {
-    spdlog::info("Plugin: {}", Plugin.name());
+    spdlog::info("Loaded Plugin: {} from path: {}", Plugin.name(),
+                 Plugin.path());
   }
 }
 

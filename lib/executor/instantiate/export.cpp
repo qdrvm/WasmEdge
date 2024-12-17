@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "executor/executor.h"
 
@@ -32,6 +32,9 @@ Expect<void> Executor::instantiate(Runtime::Instance::ModuleInstance &ModInst,
       break;
     case ExternalType::Table:
       ModInst.exportTable(ExtName, ExtIdx);
+      break;
+    case ExternalType::Tag:
+      ModInst.exportTag(ExtName, ExtIdx);
       break;
     default:
       break;

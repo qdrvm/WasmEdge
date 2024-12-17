@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 //===-- wasmedge/test/loader/descriptionTest.cpp - Load AST description ---===//
 //
@@ -179,7 +179,7 @@ TEST(DescriptionTest, LoadExportDesc) {
       0x0AU,                                           // Content size = 10
       0x01U,                                           // Vector length = 1
       0x06U, 0x4CU, 0x6FU, 0x61U, 0x64U, 0x65U, 0x72U, // External name: Loader
-      0x04U, 0x00U                                     // Invalid external type
+      0x05U, 0x00U                                     // Invalid external type
   };
   EXPECT_FALSE(Ldr.parseModule(prefixedVec(Vec)));
 

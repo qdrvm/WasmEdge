@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "po/argument_parser.h"
 #include "common/defines.h"
-#include "common/log.h"
+#include "common/spdlog.h"
 #include "system/winapi.h"
 #include <cstdio>
 

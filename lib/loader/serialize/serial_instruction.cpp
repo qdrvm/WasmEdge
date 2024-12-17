@@ -1,19 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "loader/serialize.h"
 
 namespace WasmEdge {
 namespace Loader {
-
-namespace {
-void serializeOpCode(OpCode Code, std::vector<uint8_t> &OutVec) {
-  if (static_cast<uint16_t>(Code) >= 0x100U) {
-    OutVec.push_back(static_cast<uint16_t>(Code) >> 8);
-  }
-  OutVec.push_back(static_cast<uint16_t>(Code) & 0xFFU);
-}
-} // namespace
 
 // Serialize instruction. See "include/loader/serialize.h".
 Expect<void>
@@ -40,9 +31,6 @@ Serializer::serializeInstruction(const AST::Instruction &Instr,
     return {};
   };
 
-  // Instruction: OpCode + immediate.
-  serializeOpCode(Instr.getOpCode(), OutVec);
-
   // Check with proposals.
   if (auto Res = Conf.isInstrNeedProposal(Instr.getOpCode());
       unlikely(Res.has_value())) {
@@ -50,6 +38,45 @@ Serializer::serializeInstruction(const AST::Instruction &Instr,
                            ASTNodeAttr::Instruction);
   }
 
+  // Serialize OpCode.
+  switch (Instr.getOpCode()) {
+#define UseOpCode
+#define Line(NAME, STRING, PREFIX)                                             \
+  case OpCode::NAME:                                                           \
+    OutVec.push_back(static_cast<uint8_t>(PREFIX));                            \
+    break;
+#define Line_FB(NAME, STRING, PREFIX, EXTEND)                                  \
+  case OpCode::NAME:                                                           \
+    OutVec.push_back(static_cast<uint8_t>(PREFIX));                            \
+    serializeU32(EXTEND, OutVec);                                              \
+    break;
+#define Line_FC(NAME, STRING, PREFIX, EXTEND)                                  \
+  case OpCode::NAME:                                                           \
+    OutVec.push_back(static_cast<uint8_t>(PREFIX));                            \
+    serializeU32(EXTEND, OutVec);                                              \
+    break;
+#define Line_FD(NAME, STRING, PREFIX, EXTEND)                                  \
+  case OpCode::NAME:                                                           \
+    OutVec.push_back(static_cast<uint8_t>(PREFIX));                            \
+    serializeU32(EXTEND, OutVec);                                              \
+    break;
+#define Line_FE(NAME, STRING, PREFIX, EXTEND)                                  \
+  case OpCode::NAME:                                                           \
+    OutVec.push_back(static_cast<uint8_t>(PREFIX));                            \
+    serializeU32(EXTEND, OutVec);                                              \
+    break;
+#include "common/enum.inc"
+#undef Line
+#undef Line_FB
+#undef Line_FC
+#undef Line_FD
+#undef Line_FE
+#undef UseOpCode
+  default:
+    assumingUnreachable();
+  }
+
+  // Serialize immediate.
   switch (Instr.getOpCode()) {
   // Control instructions.
   case OpCode::Unreachable:
@@ -654,6 +681,28 @@ Serializer::serializeInstruction(const AST::Instruction &Instr,
   case OpCode::F64x2__nearest:
     return {};
 
+  case OpCode::I8x16__relaxed_swizzle:
+  case OpCode::I32x4__relaxed_trunc_f32x4_s:
+  case OpCode::I32x4__relaxed_trunc_f32x4_u:
+  case OpCode::I32x4__relaxed_trunc_f64x2_s_zero:
+  case OpCode::I32x4__relaxed_trunc_f64x2_u_zero:
+  case OpCode::F32x4__relaxed_madd:
+  case OpCode::F32x4__relaxed_nmadd:
+  case OpCode::F64x2__relaxed_madd:
+  case OpCode::F64x2__relaxed_nmadd:
+  case OpCode::I8x16__relaxed_laneselect:
+  case OpCode::I16x8__relaxed_laneselect:
+  case OpCode::I32x4__relaxed_laneselect:
+  case OpCode::I64x2__relaxed_laneselect:
+  case OpCode::F32x4__relaxed_min:
+  case OpCode::F32x4__relaxed_max:
+  case OpCode::F64x2__relaxed_min:
+  case OpCode::F64x2__relaxed_max:
+  case OpCode::I16x8__relaxed_q15mulr_s:
+  case OpCode::I16x8__relaxed_dot_i8x16_i7x16_s:
+  case OpCode::I32x4__relaxed_dot_i8x16_i7x16_add_s:
+    return {};
+
   // Atomic Memory Instructions.
   case OpCode::Atomic__fence:
     return serializeCheckZero(Instr.getTargetIndex());
@@ -728,8 +777,7 @@ Serializer::serializeInstruction(const AST::Instruction &Instr,
     return serializeMemImmediate();
 
   default:
-    return logSerializeError(ErrCode::Value::IllegalOpCode,
-                             ASTNodeAttr::Instruction);
+    assumingUnreachable();
   }
 }
 

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #include "wasinnenv.h"
+#include "types.h"
 #include "wasinnmodule.h"
 
 #include <sstream>
@@ -15,6 +16,7 @@ namespace Host {
 
 namespace WASINN {
 
+namespace {
 Runtime::Instance::ModuleInstance *
 create(const Plugin::PluginModule::ModuleDescriptor *) noexcept {
   return new WasiNNModule;
@@ -27,7 +29,11 @@ std::map<std::string_view, Backend> BackendMap = {
     {"pytorch"sv, Backend::PyTorch},
     {"tensorflowlite"sv, Backend::TensorflowLite},
     {"autodetect"sv, Backend::Autodetect},
-    {"ggml"sv, Backend::GGML}};
+    {"ggml"sv, Backend::GGML},
+    {"neuralspeed"sv, Backend::NeuralSpeed},
+    {"whisper"sv, Backend::Whisper},
+    {"piper"sv, Backend::Piper},
+    {"chattts"sv, Backend::ChatTTS}};
 
 std::map<std::string_view, Device> DeviceMap = {{"cpu"sv, Device::CPU},
                                                 {"gpu"sv, Device::GPU},
@@ -48,6 +54,7 @@ bool load(const std::filesystem::path &Path, std::vector<uint8_t> &Data) {
   File.close();
   return true;
 }
+} // namespace
 
 WasiNNEnvironment::WasiNNEnvironment() noexcept {
 #ifdef WASMEDGE_BUILD_WASI_NN_RPC
@@ -87,22 +94,35 @@ WasiNNEnvironment::WasiNNEnvironment() noexcept {
     std::vector<std::vector<uint8_t>> Models;
     Models.reserve(Paths.size());
     std::transform(Encode.begin(), Encode.end(), Encode.begin(),
-                   [](unsigned char C) { return std::tolower(C); });
+                   [](unsigned char C) {
+                     return static_cast<unsigned char>(std::tolower(C));
+                   });
     std::transform(Target.begin(), Target.end(), Target.begin(),
-                   [](unsigned char C) { return std::tolower(C); });
+                   [](unsigned char C) {
+                     return static_cast<unsigned char>(std::tolower(C));
+                   });
     auto Backend = BackendMap.find(Encode);
     auto Device = DeviceMap.find(Target);
     if (Backend != BackendMap.end() && Device != DeviceMap.end()) {
-      for (const std::string &Path : Paths) {
-        if (Backend->second == Backend::GGML) {
-          // We write model path to model data to avoid file IO in llama.cpp.
-          std::string ModelPath = "preload:" + Path;
-          std::vector<uint8_t> ModelPathData(ModelPath.begin(),
-                                             ModelPath.end());
-          Models.push_back(std::move(ModelPathData));
-        } else {
+      if (Backend->second == Backend::GGML) {
+        // In GGML, we only support loading one model from nn-preload config.
+        // To handle paths on Windows that contains `:` in the path, we combine
+        // the Paths into a single string separated by `:`.
+        std::string P;
+        for (const std::string &PathSegment : Paths) {
+          P += PathSegment;
+          if (PathSegment != Paths.back()) {
+            P += ":";
+          }
+        }
+        // We write model path to model data to avoid file IO in llama.cpp.
+        std::string ModelPath = "preload:" + P;
+        std::vector<uint8_t> ModelPathData(ModelPath.begin(), ModelPath.end());
+        Models.push_back(std::move(ModelPathData));
+      } else {
+        for (const std::string &P : Paths) {
           std::vector<uint8_t> Model;
-          if (load(std::filesystem::u8path(Path), Model)) {
+          if (load(std::filesystem::u8path(P), Model)) {
             Models.push_back(std::move(Model));
           }
         }
@@ -129,6 +149,7 @@ PO::Option<std::string> WasiNNEnvironment::NNRPCURI(
     PO::MetaVar("URI"sv), PO::DefaultValue(std::string("")));
 #endif
 
+namespace {
 void addOptions(const Plugin::Plugin::PluginDescriptor *,
                 PO::ArgumentParser &Parser) noexcept {
   Parser.add_option("nn-preload"sv, WasiNNEnvironment::NNModels);
@@ -140,26 +161,30 @@ void addOptions(const Plugin::Plugin::PluginDescriptor *,
 #endif
 }
 
-Plugin::Plugin::PluginDescriptor Descriptor{
-    .Name = "wasi_nn",
-    .Description = "",
-    .APIVersion = Plugin::Plugin::CurrentAPIVersion,
-    .Version = {0, 10, 1, 0},
-    .ModuleCount = 1,
-    .ModuleDescriptions =
-        (Plugin::PluginModule::ModuleDescriptor[]){
-            {
-                .Name = "wasi_nn",
-                .Description = "",
-                .Create = create,
-            },
-        },
-    .AddOptions = addOptions,
+static Plugin::PluginModule::ModuleDescriptor MD[] = {
+    {
+        /* Name */ "wasi_nn",
+        /* Description */ "",
+        /* Create */ create,
+    },
 };
 
-} // namespace WASINN
+Plugin::Plugin::PluginDescriptor Descriptor{
+    /* Name */ "wasi_nn",
+    /* Description */ "",
+    /* APIVersion */ Plugin::Plugin::CurrentAPIVersion,
+    /* Version */ {0, 10, 1, 0},
+    /* ModuleCount */ 1,
+    /* ModuleDescriptions */ MD,
+    /* ComponentCount */ 0,
+    /* ComponentDescriptions */ nullptr,
+    /* AddOptions */ addOptions,
+};
+} // namespace
 
-Plugin::PluginRegister WASINN::WasiNNEnvironment::Register(&Descriptor);
+EXPORT_GET_DESCRIPTOR(Descriptor)
+
+} // namespace WASINN
 
 } // namespace Host
 } // namespace WasmEdge

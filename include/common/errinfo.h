@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 //===-- wasmedge/common/errinfo.h - Error information definition ----------===//
 //
@@ -19,7 +19,7 @@
 #include "common/enum_errinfo.hpp"
 #include "common/enum_types.hpp"
 #include "common/filesystem.h"
-#include "common/log.h"
+#include "common/spdlog.h"
 #include "common/types.h"
 
 #include <cstdint>

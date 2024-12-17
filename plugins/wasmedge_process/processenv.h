@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #pragma once
 
@@ -46,7 +46,6 @@ public:
 
   static PO::List<std::string> AllowCmd;
   static PO::Option<PO::Toggle> AllowCmdAll;
-  static Plugin::PluginRegister Register;
 };
 
 } // namespace Host

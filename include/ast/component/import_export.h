@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2023 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 //===-- wasmedge/ast/component/instance.h - instance class definitions ----===//
 //
@@ -32,7 +32,7 @@ public:
   std::string &getName() noexcept { return Name; }
   std::string_view getName() const noexcept { return Name; }
   ExternDesc &getDesc() noexcept { return Desc; }
-  const ExternDesc getDesc() const noexcept { return Desc; }
+  const ExternDesc &getDesc() const noexcept { return Desc; }
 };
 class Export {
   std::string Name;
@@ -43,7 +43,7 @@ public:
   std::string &getName() noexcept { return Name; }
   std::string_view getName() const noexcept { return Name; }
   SortIndex<Sort> &getSortIndex() noexcept { return Idx; }
-  const SortIndex<Sort> getSortIndex() const noexcept { return Idx; }
+  const SortIndex<Sort> &getSortIndex() const noexcept { return Idx; }
   std::optional<ExternDesc> &getDesc() noexcept { return Desc; }
   const std::optional<ExternDesc> getDesc() const noexcept { return Desc; }
 };

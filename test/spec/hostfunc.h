@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 //===-- wasmedge/test/spec/hostfunc.h - Spec test host functions ----------===//
 //
@@ -94,11 +94,11 @@ public:
     addHostGlobal(
         "global_f32",
         std::make_unique<Runtime::Instance::GlobalInstance>(
-            AST::GlobalType(TypeCode::F32, ValMut::Const), float(666)));
+            AST::GlobalType(TypeCode::F32, ValMut::Const), float(666.6)));
     addHostGlobal(
         "global_f64",
         std::make_unique<Runtime::Instance::GlobalInstance>(
-            AST::GlobalType(TypeCode::F64, ValMut::Const), double(666)));
+            AST::GlobalType(TypeCode::F64, ValMut::Const), double(666.6)));
   }
   ~SpecTestModule() noexcept override = default;
 };

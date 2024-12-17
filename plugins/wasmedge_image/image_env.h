@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2022 Second State INC
+// SPDX-FileCopyrightText: 2019-2024 Second State INC
 
 #pragma once
 
@@ -23,9 +23,7 @@ enum class DataType : uint32_t {
   BGR32F = 3,
 };
 
-struct ImgEnv {
-  static Plugin::PluginRegister Register;
-};
+struct ImgEnv {};
 
 } // namespace WasmEdgeImage
 } // namespace Host
