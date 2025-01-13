@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
+// SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 //===-- wasmedge/test/spec/spectest.cpp - Wasm test suites ----------------===//
 //
@@ -245,17 +245,6 @@ parseExpectedList(const simdjson::dom::array &Args) {
   return Result;
 }
 
-std::vector<std::vector<std::pair<std::string, std::string>>>
-parseEithersList(const simdjson::dom::array &Args) {
-  std::vector<std::vector<std::pair<std::string, std::string>>> Result;
-  Result.reserve(Args.size());
-  for (auto &Maybe : parseExpectedList(Args)) {
-    Result.emplace_back(
-        std::vector<std::pair<std::string, std::string>>{Maybe});
-  }
-  return Result;
-}
-
 struct TestsuiteProposal {
   std::string_view Path;
   WasmEdge::Configure Conf;
@@ -278,7 +267,6 @@ static const TestsuiteProposal TestsuiteProposals[] = {
     {"exception-handling-legacy"sv,
      {Proposal::ExceptionHandling, Proposal::TailCall},
      WasmEdge::SpecTest::TestMode::Interpreter},
-    {"relaxed-simd"sv, {Proposal::RelaxSIMD}},
 };
 
 } // namespace
@@ -679,32 +667,6 @@ void SpecTest::run(std::string_view Proposal, std::string_view UnitName) {
     }
   };
 
-  auto InvokeEither = [&](const simdjson::dom::object &Action,
-                          const simdjson::dom::array &Eithers,
-                          uint64_t LineNumber) {
-    const auto ModName = GetModuleName(Action);
-    const std::string_view Field = Action["field"];
-    simdjson::dom::array Args = Action["args"];
-    const auto Params = parseValueList(Args);
-    const auto Returns = parseEithersList(Eithers);
-
-    // Invoke function of named module. Named modules are registered in Store
-    // Manager. Anonymous modules are instantiated in VM.
-    if (auto Res = onInvoke(ModName, std::string(Field), Params.first,
-                            Params.second)) {
-      // Check value.
-      for (auto &Maybe : Returns) {
-        if (compares(Maybe, *Res)) {
-          return;
-        }
-      }
-      EXPECT_TRUE(compares(Returns[0], *Res))
-          << "This is One of available returns.";
-    } else {
-      EXPECT_NE(LineNumber, LineNumber);
-    }
-  };
-
   // Helper function to get values.
   auto Get = [&](const simdjson::dom::object &Action,
                  const simdjson::dom::array &Expected, uint64_t LineNumber) {
@@ -823,24 +785,15 @@ void SpecTest::run(std::string_view Proposal, std::string_view UnitName) {
       case CommandID::AssertReturn: {
         const uint64_t LineNumber = Cmd["line"];
         const simdjson::dom::object &Action = Cmd["action"];
+        const simdjson::dom::array &Expected = Cmd["expected"];
         const std::string_view ActType = Action["type"];
-        simdjson::dom::array Expected, Either;
-
-        if (Cmd["expected"].get(Expected) == simdjson::error_code::SUCCESS) {
-          if (ActType == "invoke"sv) {
-            Invoke(Action, Expected, LineNumber);
-            return;
-          } else if (ActType == "get"sv) {
-            Get(Action, Expected, LineNumber);
-            return;
-          }
-        } else if (Cmd["either"].get(Either) == simdjson::error_code::SUCCESS) {
-          if (ActType == "invoke"sv) {
-            InvokeEither(Action, Either, LineNumber);
-            return;
-          }
+        if (ActType == "invoke"sv) {
+          Invoke(Action, Expected, LineNumber);
+          return;
+        } else if (ActType == "get"sv) {
+          Get(Action, Expected, LineNumber);
+          return;
         }
-
         EXPECT_TRUE(false);
         return;
       }

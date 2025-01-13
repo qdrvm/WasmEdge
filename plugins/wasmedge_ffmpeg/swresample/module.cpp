@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #include "module.h"
 #include "swresample_func.h"
 
@@ -12,6 +9,7 @@ namespace SWResample {
 WasmEdgeFFmpegSWResampleModule::WasmEdgeFFmpegSWResampleModule(
     std::shared_ptr<WasmEdgeFFmpegEnv> Env)
     : ModuleInstance("wasmedge_ffmpeg_swresample") {
+
   addHostFunc("wasmedge_ffmpeg_swresample_swresample_version",
               std::make_unique<SWResampleVersion>(Env));
   addHostFunc("wasmedge_ffmpeg_swresample_swr_get_delay",

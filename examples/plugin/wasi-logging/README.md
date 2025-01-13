@@ -21,10 +21,13 @@ Build wasmedge from scratch with the WASI-Logging plugin enabled.
 git clone https://github.com/WasmEdge/WasmEdge.git --depth 1
 cd WasmEdge
 mkdir build; cd build
-cmake -DCMAKE_BUILD_TYPE=Release .. 
+cmake -DCMAKE_BUILD_TYPE=Release -DWASMEDGE_PLUGIN_WASI_LOGGING=ON .. 
 make -j
-# WASI-Logging plug-in is a built-in plug-in in WasmEdge library.
+# to tell wasmedge where to find the WASI-Logging plugin.
+export WASMEDGE_PLUGIN_PATH=$PWD/plugins/wasi_logging
 ```
+
+If you install WasmEdge using the install script, you can copy library `wasmedge/build/plugins/wasi_logging/libwasmedgePluginWasiLogging.so` to `$HOME/.wasmedge/plugin/`
 
 ### (Optional) Download WASI-Logging WIT files
 

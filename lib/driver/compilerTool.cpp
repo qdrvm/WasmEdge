@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
+// SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 #include "common/configure.h"
 #include "common/defines.h"
@@ -12,6 +12,7 @@
 #include "llvm/compiler.h"
 #include <cstdint>
 #include <cstdlib>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -49,9 +50,6 @@ int Compiler([[maybe_unused]] struct DriverCompilerOptions &Opt) noexcept {
   }
   if (Opt.PropSIMD.value()) {
     Conf.removeProposal(Proposal::SIMD);
-  }
-  if (Opt.PropRelaxedSIMD.value()) {
-    Conf.addProposal(Proposal::RelaxSIMD);
   }
   if (Opt.PropMultiMem.value()) {
     Conf.addProposal(Proposal::MultiMemories);

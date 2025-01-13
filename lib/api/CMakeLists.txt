@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-# SPDX-FileCopyrightText: 2019-2024 Second State INC
+# SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 find_package(spdlog QUIET)
 add_definitions(-DWASMEDGE_COMPILE_LIBRARY)
@@ -97,6 +97,7 @@ target_include_directories(wasmedgeCAPI
 )
 
 if(WASMEDGE_BUILD_SHARED_LIB)
+
   wasmedge_add_library(wasmedge_shared SHARED
     ../../include/api/wasmedge/wasmedge.h
   )
@@ -137,6 +138,7 @@ if(WASMEDGE_BUILD_SHARED_LIB)
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wasmedge
   )
+
 endif()
 
 if(WASMEDGE_BUILD_STATIC_LIB)
@@ -151,9 +153,6 @@ if(WASMEDGE_BUILD_STATIC_LIB)
   wasmedge_add_static_lib_component_command(wasmedgeExecutor)
   wasmedge_add_static_lib_component_command(wasmedgeHostModuleWasi)
   wasmedge_add_static_lib_component_command(wasmedgePlugin)
-  # BUILTIN-PLUGIN: Temporary add the wasi-logging plugin here until the new
-  # plugin architecture ready in 0.15.0.
-  wasmedge_add_static_lib_component_command(wasmedgePluginWasiLogging)
   wasmedge_add_static_lib_component_command(wasmedgeVM)
   wasmedge_add_static_lib_component_command(wasmedgeDriver)
 
@@ -202,10 +201,12 @@ if(WASMEDGE_BUILD_STATIC_LIB)
   install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${WASMEDGE_LIBRARY_NAME}"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
+
+endif()
+
   install(FILES ${WASMEDGE_CAPI_HEADERS}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wasmedge
   )
   install(FILES ${PROJECT_SOURCE_DIR}/cmake/wasmedge-config.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/wasmedge)
 
-endif()

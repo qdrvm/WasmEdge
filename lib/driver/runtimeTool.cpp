@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
+// SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 #include "common/configure.h"
 #include "common/filesystem.h"
@@ -13,6 +13,7 @@
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
+#include <iostream>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -51,9 +52,6 @@ int Tool(struct DriverToolOptions &Opt) noexcept {
   }
   if (Opt.PropSIMD.value()) {
     Conf.removeProposal(Proposal::SIMD);
-  }
-  if (Opt.PropRelaxedSIMD.value()) {
-    Conf.addProposal(Proposal::RelaxSIMD);
   }
   if (Opt.PropMultiMem.value()) {
     Conf.addProposal(Proposal::MultiMemories);
@@ -204,9 +202,8 @@ int Tool(struct DriverToolOptions &Opt) noexcept {
   } else {
     // reactor mode
     if (Opt.Args.value().empty()) {
-      fmt::print(
-          stderr,
-          "A function name is required when reactor mode is enabled.\n"sv);
+      std::cerr
+          << "A function name is required when reactor mode is enabled.\n";
       return EXIT_FAILURE;
     }
     const auto &FuncName = Opt.Args.value().front();
@@ -270,12 +267,6 @@ int Tool(struct DriverToolOptions &Opt) noexcept {
         FuncArgTypes.emplace_back(TypeCode::F64);
         break;
       }
-      case TypeCode::String: {
-        std::string &Value = Opt.Args.value()[I + 1];
-        FuncArgs.emplace_back(StrVariant(std::move(Value)));
-        FuncArgTypes.emplace_back(TypeCode::String);
-        break;
-      }
       /// TODO: FuncRef and ExternRef
       default:
         break;
@@ -302,19 +293,19 @@ int Tool(struct DriverToolOptions &Opt) noexcept {
       for (size_t I = 0; I < Result->size(); ++I) {
         switch ((*Result)[I].second.getCode()) {
         case TypeCode::I32:
-          fmt::print("{}\n"sv, (*Result)[I].first.get<uint32_t>());
+          std::cout << (*Result)[I].first.get<uint32_t>() << '\n';
           break;
         case TypeCode::I64:
-          fmt::print("{}\n"sv, (*Result)[I].first.get<uint64_t>());
+          std::cout << (*Result)[I].first.get<uint64_t>() << '\n';
           break;
         case TypeCode::F32:
-          fmt::print("{}\n"sv, (*Result)[I].first.get<float>());
+          std::cout << (*Result)[I].first.get<float>() << '\n';
           break;
         case TypeCode::F64:
-          fmt::print("{}\n"sv, (*Result)[I].first.get<double>());
+          std::cout << (*Result)[I].first.get<double>() << '\n';
           break;
         case TypeCode::V128:
-          fmt::print("{}\n"sv, (*Result)[I].first.get<uint128_t>());
+          std::cout << (*Result)[I].first.get<uint128_t>() << '\n';
           break;
         /// TODO: FuncRef and ExternRef
         default:

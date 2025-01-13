@@ -1,9 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #include "avformat/avStream.h"
 #include "avformat/module.h"
-
 #include "utils.h"
 
 #include <gtest/gtest.h>
@@ -14,6 +10,7 @@ namespace WasmEdgeFFmpeg {
 
 // Testing all AVFormat_funcs.
 TEST_F(FFmpegTest, AVStreamStruct) {
+
   ASSERT_TRUE(AVFormatMod != nullptr);
 
   uint32_t StreamIdx = 0;

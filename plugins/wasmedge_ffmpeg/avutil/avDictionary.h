@@ -1,35 +1,36 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #pragma once
 
-#include "ffmpeg_base.h"
+#include "avutil_base.h"
+#include "runtime/callingframe.h"
 
 namespace WasmEdge {
 namespace Host {
 namespace WasmEdgeFFmpeg {
 namespace AVUtil {
 
-class AVDictSet : public HostFunction<AVDictSet> {
+class AVDictSet : public WasmEdgeFFmpegAVUtil<AVDictSet> {
 public:
-  using HostFunction::HostFunction;
+  AVDictSet(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t DictId,
                        uint32_t KeyPtr, uint32_t KeyLen, uint32_t ValuePtr,
                        uint32_t ValueLen, int32_t Flags);
 };
 
-class AVDictGet : public HostFunction<AVDictGet> {
+class AVDictGet : public WasmEdgeFFmpegAVUtil<AVDictGet> {
 public:
-  using HostFunction::HostFunction;
+  AVDictGet(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t DictId,
                        uint32_t KeyPtr, uint32_t KeyLen,
                        uint32_t PrevDictEntryIdx, uint32_t Flags,
                        uint32_t KeyLenPtr, uint32_t ValueLenPtr);
 };
 
-class AVDictGetKeyValue : public HostFunction<AVDictGetKeyValue> {
+class AVDictGetKeyValue : public WasmEdgeFFmpegAVUtil<AVDictGetKeyValue> {
 public:
-  using HostFunction::HostFunction;
+  AVDictGetKeyValue(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t DictId,
                        uint32_t KeyPtr, uint32_t KeyLen, uint32_t ValBufPtr,
                        uint32_t ValBufLen, uint32_t KeyBufPtr,
@@ -37,16 +38,18 @@ public:
                        uint32_t Flags);
 };
 
-class AVDictCopy : public HostFunction<AVDictCopy> {
+class AVDictCopy : public WasmEdgeFFmpegAVUtil<AVDictCopy> {
 public:
-  using HostFunction::HostFunction;
+  AVDictCopy(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t DestDictId,
                        uint32_t SrcDictId, uint32_t Flags);
 };
 
-class AVDictFree : public HostFunction<AVDictFree> {
+class AVDictFree : public WasmEdgeFFmpegAVUtil<AVDictFree> {
 public:
-  using HostFunction::HostFunction;
+  AVDictFree(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t DictId);
 };
 

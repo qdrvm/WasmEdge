@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
+// SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 #include "loader/loader.h"
 
@@ -313,18 +313,11 @@ Expect<void> Loader::loadInstruction(AST::Instruction &Instr) {
     if (auto Res = readU32(Instr.getMemoryAlign()); unlikely(!Res)) {
       return Unexpect(Res);
     }
-    if (Instr.getMemoryAlign() >= 128) {
-      return logLoadError(ErrCode::Value::InvalidStoreAlignment,
-                          FMgr.getLastOffset(), ASTNodeAttr::Instruction);
-    } else if (Instr.getMemoryAlign() >= 64) {
-      if (Conf.hasProposal(Proposal::MultiMemories)) {
-        Instr.getMemoryAlign() -= 64;
-        if (auto Res = readU32(Instr.getTargetIndex()); unlikely(!Res)) {
-          return Unexpect(Res);
-        }
-      } else {
-        return logLoadError(ErrCode::Value::InvalidStoreAlignment,
-                            FMgr.getLastOffset(), ASTNodeAttr::Instruction);
+    if (Conf.hasProposal(Proposal::MultiMemories) &&
+        Instr.getMemoryAlign() >= 64) {
+      Instr.getMemoryAlign() -= 64;
+      if (auto Res = readU32(Instr.getTargetIndex()); unlikely(!Res)) {
+        return Unexpect(Res);
       }
     }
     if (auto Res = readU32(Instr.getMemoryOffset()); unlikely(!Res)) {
@@ -1175,28 +1168,6 @@ Expect<void> Loader::loadInstruction(AST::Instruction &Instr) {
   case OpCode::F64x2__floor:
   case OpCode::F64x2__trunc:
   case OpCode::F64x2__nearest:
-    return {};
-
-  case OpCode::I8x16__relaxed_swizzle:
-  case OpCode::I32x4__relaxed_trunc_f32x4_s:
-  case OpCode::I32x4__relaxed_trunc_f32x4_u:
-  case OpCode::I32x4__relaxed_trunc_f64x2_s_zero:
-  case OpCode::I32x4__relaxed_trunc_f64x2_u_zero:
-  case OpCode::F32x4__relaxed_madd:
-  case OpCode::F32x4__relaxed_nmadd:
-  case OpCode::F64x2__relaxed_madd:
-  case OpCode::F64x2__relaxed_nmadd:
-  case OpCode::I8x16__relaxed_laneselect:
-  case OpCode::I16x8__relaxed_laneselect:
-  case OpCode::I32x4__relaxed_laneselect:
-  case OpCode::I64x2__relaxed_laneselect:
-  case OpCode::F32x4__relaxed_min:
-  case OpCode::F32x4__relaxed_max:
-  case OpCode::F64x2__relaxed_min:
-  case OpCode::F64x2__relaxed_max:
-  case OpCode::I16x8__relaxed_q15mulr_s:
-  case OpCode::I16x8__relaxed_dot_i8x16_i7x16_s:
-  case OpCode::I32x4__relaxed_dot_i8x16_i7x16_add_s:
     return {};
 
   // Atomic Memory Instructions.

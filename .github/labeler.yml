@@ -85,7 +85,7 @@
       'test/**/*'
     ]
 
-'WASI':
+'c-WASI':
   - changed-files:
     - any-glob-to-any-file: [
       'include/host/wasi/**',
@@ -94,7 +94,7 @@
       'lib/host/wasi/**/*'
     ]
 
-'WASI-NN':
+'c-WASI-NN':
   - changed-files:
     - any-glob-to-any-file: [
       'plugins/wasi_nn/**',

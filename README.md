@@ -55,6 +55,7 @@ WasmEdge and its contained wasm program can be started from the [CLI](https://wa
 * [Orchestrate and manage WasmEdge instances using container tools](https://wasmedge.org/docs/category/deploy-wasmedge-apps-in-kubernetes)
 * [Run a WasmEdge app as a Dapr microservice](https://wasmedge.org/docs/develop/rust/dapr)
 
+
 # Community
 
 ## Contributing

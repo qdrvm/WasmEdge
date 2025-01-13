@@ -1,11 +1,7 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #include "swscale/swscale_func.h"
 #include "swscale/module.h"
 
 #include "utils.h"
-
 #include <gtest/gtest.h>
 
 namespace WasmEdge {
@@ -17,6 +13,7 @@ namespace WasmEdgeFFmpeg {
 // ============================================================================
 
 TEST_F(FFmpegTest, SwsContext) {
+
   ASSERT_TRUE(SWScaleMod != nullptr);
 
   auto *FuncInst =
@@ -202,6 +199,7 @@ TEST_F(FFmpegTest, SwsContext) {
 // ============================================================================
 
 TEST_F(FFmpegTest, SwsFilter) {
+
   ASSERT_TRUE(SWScaleMod != nullptr);
   auto *FuncInst = SWScaleMod->findFuncExports(
       "wasmedge_ffmpeg_swscale_sws_getDefaultFilter");
@@ -323,6 +321,7 @@ TEST_F(FFmpegTest, SwsFilter) {
 // ============================================================================
 
 TEST_F(FFmpegTest, SwsVector) {
+
   ASSERT_TRUE(SWScaleMod != nullptr);
   uint32_t SwsVectorPtr = UINT32_C(40);
   uint32_t CoeffPtr = UINT32_C(100);
@@ -457,6 +456,7 @@ TEST_F(FFmpegTest, SwsVector) {
 // ============================================================================
 
 TEST_F(FFmpegTest, SWScaleVersion) {
+
   ASSERT_TRUE(SWScaleMod != nullptr);
 
   uint32_t Length = 0;

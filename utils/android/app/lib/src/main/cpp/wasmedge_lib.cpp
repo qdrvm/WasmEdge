@@ -34,3 +34,4 @@ Java_org_wasmedge_native_1lib_NativeLib_nativeWasmFibonacci(JNIEnv *env, jobject
     }
     return WasmEdge_ValueGetI32(ret_val[0]);
 }
+

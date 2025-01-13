@@ -1,9 +1,6 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #pragma once
-
-#include "ffmpeg_base.h"
+#include "avutil_base.h"
+#include "runtime/callingframe.h"
 
 namespace WasmEdge {
 namespace Host {
@@ -11,103 +8,120 @@ namespace WasmEdgeFFmpeg {
 namespace AVUtil {
 
 class AvPixFmtDescriptorNbComponents
-    : public HostFunction<AvPixFmtDescriptorNbComponents> {
+    : public WasmEdgeFFmpegAVUtil<AvPixFmtDescriptorNbComponents> {
 public:
-  using HostFunction::HostFunction;
+  AvPixFmtDescriptorNbComponents(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t PixFormatId);
 };
 
 class AvPixFmtDescriptorLog2ChromaW
-    : public HostFunction<AvPixFmtDescriptorLog2ChromaW> {
+    : public WasmEdgeFFmpegAVUtil<AvPixFmtDescriptorLog2ChromaW> {
 public:
-  using HostFunction::HostFunction;
+  AvPixFmtDescriptorLog2ChromaW(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t PixFormatId);
 };
 
 class AvPixFmtDescriptorLog2ChromaH
-    : public HostFunction<AvPixFmtDescriptorLog2ChromaH> {
+    : public WasmEdgeFFmpegAVUtil<AvPixFmtDescriptorLog2ChromaH> {
 public:
-  using HostFunction::HostFunction;
+  AvPixFmtDescriptorLog2ChromaH(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t PixFormatId);
 };
 
-class AVColorRangeNameLength : public HostFunction<AVColorRangeNameLength> {
+class AVColorRangeNameLength
+    : public WasmEdgeFFmpegAVUtil<AVColorRangeNameLength> {
 public:
-  using HostFunction::HostFunction;
+  AVColorRangeNameLength(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, int32_t RangeId);
 };
 
-class AVColorRangeName : public HostFunction<AVColorRangeName> {
+class AVColorRangeName : public WasmEdgeFFmpegAVUtil<AVColorRangeName> {
 public:
-  using HostFunction::HostFunction;
+  AVColorRangeName(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, int32_t RangeId,
                        uint32_t RangeName, uint32_t RangeLength);
 };
 
 class AVColorTransferNameLength
-    : public HostFunction<AVColorTransferNameLength> {
+    : public WasmEdgeFFmpegAVUtil<AVColorTransferNameLength> {
 public:
-  using HostFunction::HostFunction;
+  AVColorTransferNameLength(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, int32_t TransferId);
 };
 
-class AVColorTransferName : public HostFunction<AVColorTransferName> {
+class AVColorTransferName : public WasmEdgeFFmpegAVUtil<AVColorTransferName> {
 public:
-  using HostFunction::HostFunction;
+  AVColorTransferName(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, int32_t TransferId,
                        uint32_t TransferNamePtr, uint32_t TransferLength);
 };
 
-class AVColorSpaceNameLength : public HostFunction<AVColorSpaceNameLength> {
+class AVColorSpaceNameLength
+    : public WasmEdgeFFmpegAVUtil<AVColorSpaceNameLength> {
 public:
-  using HostFunction::HostFunction;
+  AVColorSpaceNameLength(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        int32_t ColorSpaceId);
 };
 
-class AVColorSpaceName : public HostFunction<AVColorSpaceName> {
+class AVColorSpaceName : public WasmEdgeFFmpegAVUtil<AVColorSpaceName> {
 public:
-  using HostFunction::HostFunction;
+  AVColorSpaceName(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, int32_t ColorSpaceId,
                        uint32_t ColorSpaceNamePtr, uint32_t ColorSpaceLen);
 };
 
 class AVColorPrimariesNameLength
-    : public HostFunction<AVColorPrimariesNameLength> {
+    : public WasmEdgeFFmpegAVUtil<AVColorPrimariesNameLength> {
 public:
-  using HostFunction::HostFunction;
+  AVColorPrimariesNameLength(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        int32_t ColorPrimariesId);
 };
 
-class AVColorPrimariesName : public HostFunction<AVColorPrimariesName> {
+class AVColorPrimariesName : public WasmEdgeFFmpegAVUtil<AVColorPrimariesName> {
 public:
-  using HostFunction::HostFunction;
+  AVColorPrimariesName(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        int32_t ColorPrimariesId, uint32_t ColorPrimariesNamePtr,
                        uint32_t ColorPrimariesLen);
 };
 
-class AVPixelFormatNameLength : public HostFunction<AVPixelFormatNameLength> {
+class AVPixelFormatNameLength
+    : public WasmEdgeFFmpegAVUtil<AVPixelFormatNameLength> {
 public:
-  using HostFunction::HostFunction;
+  AVPixelFormatNameLength(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t AvPixFormatId);
 };
 
-class AVPixelFormatName : public HostFunction<AVPixelFormatName> {
+class AVPixelFormatName : public WasmEdgeFFmpegAVUtil<AVPixelFormatName> {
 public:
-  using HostFunction::HostFunction;
+  AVPixelFormatName(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t PixFormatId,
                        uint32_t PixFormatNamePtr, uint32_t PixFormatNameLen);
 };
 
-class AVPixelFormatMask : public HostFunction<AVPixelFormatMask> {
+class AVPixelFormatMask : public WasmEdgeFFmpegAVUtil<AVPixelFormatMask> {
 public:
-  using HostFunction::HostFunction;
+  AVPixelFormatMask(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t PixFormatId);
 };

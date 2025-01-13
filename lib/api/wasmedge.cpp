@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
+// SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 #include "wasmedge/wasmedge.h"
 
 #include "common/defines.h"
+#include "common/enum_errcode.hpp"
 #include "driver/compiler.h"
 #include "driver/tool.h"
 #include "driver/unitool.h"
@@ -13,6 +14,7 @@
 #include "vm/vm.h"
 #include "llvm/codegen.h"
 #include "llvm/compiler.h"
+#include "llvm/jit.h"
 
 #ifdef WASMEDGE_BUILD_FUZZING
 #include "driver/fuzzPO.h"
@@ -1793,6 +1795,29 @@ WASMEDGE_CAPI_EXPORT WasmEdge_Result WasmEdge_LoaderSerializeASTModule(
       Cxt, ASTCxt, Buf);
 }
 
+WASMEDGE_CAPI_EXPORT extern WasmEdge_Result
+WasmEdge_LoaderPrepareForJIT(WasmEdge_LoaderContext *Ctx,
+                             WasmEdge_ASTModuleContext *ASTCxt,
+                             const WasmEdge_ConfigureContext *ConfCxt) {
+#ifdef WASMEDGE_USE_LLVM
+  LLVM::Compiler Compiler(ConfCxt->Conf);
+  LLVM::JIT JIT(ConfCxt->Conf);
+  auto *Mod = fromASTModCxt(ASTCxt);
+  if (auto Res = Compiler.compile(*Mod); !Res) {
+    const auto Err = static_cast<uint32_t>(Res.error());
+    return genWasmEdge_Result(Err);
+  } else if (auto Res2 = JIT.load(std::move(*Res)); !Res2) {
+    const auto Err = static_cast<uint32_t>(Res2.error());
+    return genWasmEdge_Result(Err);
+  } else {
+    fromLoaderCxt(Ctx)->loadExecutable(*Mod, std::move(*Res2));
+  }
+  return genWasmEdge_Result(ErrCode::Value::Success);
+#else
+  return genWasmEdge_Result(ErrCode::Value::JITDisabled);
+#endif
+}
+
 WASMEDGE_CAPI_EXPORT void WasmEdge_LoaderDelete(WasmEdge_LoaderContext *Cxt) {
   delete fromLoaderCxt(Cxt);
 }
@@ -3270,7 +3295,9 @@ WASMEDGE_CAPI_EXPORT extern "C" int WasmEdge_Driver_FuzzPO(const uint8_t *Data,
 // >>>>>>>> WasmEdge Plugin functions >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 WASMEDGE_CAPI_EXPORT void WasmEdge_PluginLoadWithDefaultPaths(void) {
-  WasmEdge::Plugin::Plugin::loadFromDefaultPaths();
+  for (const auto &Path : WasmEdge::Plugin::Plugin::getDefaultPluginPaths()) {
+    WasmEdge::Plugin::Plugin::load(Path);
+  }
 }
 
 WASMEDGE_CAPI_EXPORT void WasmEdge_PluginLoadFromPath(const char *Path) {

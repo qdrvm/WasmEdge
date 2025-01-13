@@ -1,9 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #include "avutil/error.h"
 #include "avutil/module.h"
-
 #include "utils.h"
 
 #include <gtest/gtest.h>
@@ -13,14 +9,16 @@ namespace Host {
 namespace WasmEdgeFFmpeg {
 
 TEST_F(FFmpegTest, AVError) {
-  using namespace std::literals::string_view_literals;
+
   ASSERT_TRUE(AVUtilMod != nullptr);
 
   int32_t ErrNum = 35;
+
   uint32_t ErrStartPtr = UINT32_C(100);
   uint32_t ErrSize = 10;
   fillMemContent(MemInst, ErrStartPtr, ErrSize);
-  fillMemContent(MemInst, ErrStartPtr, "Test Error"sv);
+
+  fillMemContent(MemInst, ErrStartPtr, std::string("Test Error"));
 
   auto *FuncInst =
       AVUtilMod->findFuncExports("wasmedge_ffmpeg_avutil_av_strerror");

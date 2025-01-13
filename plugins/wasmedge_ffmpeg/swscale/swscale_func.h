@@ -1,18 +1,17 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #pragma once
 
-#include "ffmpeg_base.h"
+#include "runtime/callingframe.h"
+#include "swscale_base.h"
 
 namespace WasmEdge {
 namespace Host {
 namespace WasmEdgeFFmpeg {
 namespace SWScale {
 
-class SwsGetContext : public HostFunction<SwsGetContext> {
+class SwsGetContext : public WasmEdgeFFmpegSWScale<SwsGetContext> {
 public:
-  using HostFunction::HostFunction;
+  SwsGetContext(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t SwsCtxPtr,
                        uint32_t SrcW, uint32_t SrcH, uint32_t SrcPixFormatId,
                        uint32_t DesW, uint32_t DesH, uint32_t DesPixFormatId,
@@ -20,23 +19,26 @@ public:
                        uint32_t DesFilterId);
 };
 
-class SwsFreeContext : public HostFunction<SwsFreeContext> {
+class SwsFreeContext : public WasmEdgeFFmpegSWScale<SwsFreeContext> {
 public:
-  using HostFunction::HostFunction;
+  SwsFreeContext(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t SwsCtxId);
 };
 
-class SwsScale : public HostFunction<SwsScale> {
+class SwsScale : public WasmEdgeFFmpegSWScale<SwsScale> {
 public:
-  using HostFunction::HostFunction;
+  SwsScale(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t SwsCtxId,
                        uint32_t InputFrameId, int32_t SrcSliceY,
                        int32_t SrcSliceH, uint32_t OutputFrameId);
 };
 
-class SwsGetCachedContext : public HostFunction<SwsGetCachedContext> {
+class SwsGetCachedContext : public WasmEdgeFFmpegSWScale<SwsGetCachedContext> {
 public:
-  using HostFunction::HostFunction;
+  SwsGetCachedContext(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t SwsCachedCtxPtr, uint32_t SwsCtxPtr,
                        uint32_t SrcW, uint32_t SrcH, uint32_t SrcPixFormatId,
@@ -45,31 +47,36 @@ public:
                        uint32_t DesFilterId);
 };
 
-class SwsIsSupportedInput : public HostFunction<SwsIsSupportedInput> {
+class SwsIsSupportedInput : public WasmEdgeFFmpegSWScale<SwsIsSupportedInput> {
 public:
-  using HostFunction::HostFunction;
+  SwsIsSupportedInput(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t PixFormatId);
 };
 
-class SwsIsSupportedOutput : public HostFunction<SwsIsSupportedOutput> {
+class SwsIsSupportedOutput
+    : public WasmEdgeFFmpegSWScale<SwsIsSupportedOutput> {
 public:
-  using HostFunction::HostFunction;
+  SwsIsSupportedOutput(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t PixFormatId);
 };
 
 class SwsIsSupportedEndiannessConversion
-    : public HostFunction<SwsIsSupportedEndiannessConversion> {
+    : public WasmEdgeFFmpegSWScale<SwsIsSupportedEndiannessConversion> {
 public:
-  using HostFunction::HostFunction;
+  SwsIsSupportedEndiannessConversion(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t PixFormatId);
 };
 
-class SwsGetDefaultFilter : public HostFunction<SwsGetDefaultFilter> {
+class SwsGetDefaultFilter : public WasmEdgeFFmpegSWScale<SwsGetDefaultFilter> {
 public:
-  using HostFunction::HostFunction;
+  SwsGetDefaultFilter(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t SwsFilterPtr, float LumaGBlur,
                        float ChromaGBlur, float LumaSharpen,
@@ -77,118 +84,138 @@ public:
                        float ChromaVShift, int32_t Verbose);
 };
 
-class SwsGetLumaH : public HostFunction<SwsGetLumaH> {
+class SwsGetLumaH : public WasmEdgeFFmpegSWScale<SwsGetLumaH> {
 public:
-  using HostFunction::HostFunction;
+  SwsGetLumaH(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t SwsFilterId,
                        uint32_t SwsVectorPtr);
 };
 
-class SwsGetLumaV : public HostFunction<SwsGetLumaV> {
+class SwsGetLumaV : public WasmEdgeFFmpegSWScale<SwsGetLumaV> {
 public:
-  using HostFunction::HostFunction;
+  SwsGetLumaV(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t SwsFilterId,
                        uint32_t SwsVectorPtr);
 };
 
-class SwsGetChromaH : public HostFunction<SwsGetChromaH> {
+class SwsGetChromaH : public WasmEdgeFFmpegSWScale<SwsGetChromaH> {
 public:
-  using HostFunction::HostFunction;
+  SwsGetChromaH(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t SwsFilterId,
                        uint32_t SwsVectorPtr);
 };
 
-class SwsGetChromaV : public HostFunction<SwsGetChromaV> {
+class SwsGetChromaV : public WasmEdgeFFmpegSWScale<SwsGetChromaV> {
 public:
-  using HostFunction::HostFunction;
+  SwsGetChromaV(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t SwsFilterId,
                        uint32_t SwsVectorPtr);
 };
 
-class SwsFreeFilter : public HostFunction<SwsFreeFilter> {
+class SwsFreeFilter : public WasmEdgeFFmpegSWScale<SwsFreeFilter> {
 public:
-  using HostFunction::HostFunction;
+  SwsFreeFilter(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t SwsFilterId);
 };
 
-class SwsAllocVec : public HostFunction<SwsAllocVec> {
+class SwsAllocVec : public WasmEdgeFFmpegSWScale<SwsAllocVec> {
 public:
-  using HostFunction::HostFunction;
+  SwsAllocVec(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t SwsVectorPtr, int32_t Length);
 };
 
-class SwsGetGaussianVec : public HostFunction<SwsGetGaussianVec> {
+class SwsGetGaussianVec : public WasmEdgeFFmpegSWScale<SwsGetGaussianVec> {
 public:
-  using HostFunction::HostFunction;
+  SwsGetGaussianVec(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t SwsVectorPtr, double Variance, double Quality);
 };
 
-class SwsScaleVec : public HostFunction<SwsScaleVec> {
+class SwsScaleVec : public WasmEdgeFFmpegSWScale<SwsScaleVec> {
 public:
-  using HostFunction::HostFunction;
+  SwsScaleVec(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t SwsVectorId,
                        double Scalar);
 };
 
-class SwsNormalizeVec : public HostFunction<SwsNormalizeVec> {
+class SwsNormalizeVec : public WasmEdgeFFmpegSWScale<SwsNormalizeVec> {
 public:
-  using HostFunction::HostFunction;
+  SwsNormalizeVec(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t SwsVectorId,
                        double Height);
 };
 
-class SwsGetCoeffVecLength : public HostFunction<SwsGetCoeffVecLength> {
+class SwsGetCoeffVecLength
+    : public WasmEdgeFFmpegSWScale<SwsGetCoeffVecLength> {
 public:
-  using HostFunction::HostFunction;
+  SwsGetCoeffVecLength(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &, uint32_t SwsVectorId);
 };
 
-class SwsGetCoeff : public HostFunction<SwsGetCoeff> {
+class SwsGetCoeff : public WasmEdgeFFmpegSWScale<SwsGetCoeff> {
 public:
-  using HostFunction::HostFunction;
+  SwsGetCoeff(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &, uint32_t SwsVectorId,
                        uint32_t CoeffBuf, uint32_t Len);
 };
 
-class SwsFreeVec : public HostFunction<SwsFreeVec> {
+class SwsFreeVec : public WasmEdgeFFmpegSWScale<SwsFreeVec> {
 public:
-  using HostFunction::HostFunction;
+  SwsFreeVec(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t SwsVectorId);
 };
 
-class SwscaleVersion : public HostFunction<SwscaleVersion> {
+class SwscaleVersion : public WasmEdgeFFmpegSWScale<SwscaleVersion> {
 public:
-  using HostFunction::HostFunction;
+  SwscaleVersion(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<uint32_t> body(const Runtime::CallingFrame &Frame);
 };
 
 class SwscaleConfigurationLength
-    : public HostFunction<SwscaleConfigurationLength> {
+    : public WasmEdgeFFmpegSWScale<SwscaleConfigurationLength> {
 public:
-  using HostFunction::HostFunction;
+  SwscaleConfigurationLength(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame);
 };
 
-class SwscaleConfiguration : public HostFunction<SwscaleConfiguration> {
+class SwscaleConfiguration
+    : public WasmEdgeFFmpegSWScale<SwscaleConfiguration> {
 public:
-  using HostFunction::HostFunction;
+  SwscaleConfiguration(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t ConfigPtr,
                        uint32_t ConfigLen);
 };
 
-class SwscaleLicenseLength : public HostFunction<SwscaleLicenseLength> {
+class SwscaleLicenseLength
+    : public WasmEdgeFFmpegSWScale<SwscaleLicenseLength> {
 public:
-  using HostFunction::HostFunction;
+  SwscaleLicenseLength(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame);
 };
 
-class SwscaleLicense : public HostFunction<SwscaleLicense> {
+class SwscaleLicense : public WasmEdgeFFmpegSWScale<SwscaleLicense> {
 public:
-  using HostFunction::HostFunction;
+  SwscaleLicense(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWScale(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t LicensePtr,
                        uint32_t LicenseLen);
 };

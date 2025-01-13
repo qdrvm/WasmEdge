@@ -1,32 +1,34 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #pragma once
-
-#include "ffmpeg_base.h"
+#include "avcodec_base.h"
+#include "runtime/callingframe.h"
 
 namespace WasmEdge {
 namespace Host {
 namespace WasmEdgeFFmpeg {
 namespace AVcodec {
 
-class AVCodecParamCodecId : public HostFunction<AVCodecParamCodecId> {
+class AVCodecParamCodecId : public WasmEdgeFFmpegAVCodec<AVCodecParamCodecId> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecParamCodecId(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<uint32_t> body(const Runtime::CallingFrame &Frame,
                         uint32_t AvCodecParamId);
 };
 
-class AVCodecParamCodecType : public HostFunction<AVCodecParamCodecType> {
+class AVCodecParamCodecType
+    : public WasmEdgeFFmpegAVCodec<AVCodecParamCodecType> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecParamCodecType(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t AvCodecParamId);
 };
 
-class AVCodecParamSetCodecTag : public HostFunction<AVCodecParamSetCodecTag> {
+class AVCodecParamSetCodecTag
+    : public WasmEdgeFFmpegAVCodec<AVCodecParamSetCodecTag> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecParamSetCodecTag(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t AvCodecParamId, uint32_t CodecTag);
 };

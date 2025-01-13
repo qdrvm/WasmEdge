@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
+// SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 #include "common/defines.h"
 #include "common/filesystem.h"
-#include "experimental/span.hpp"
 #include "wasmedge/wasmedge.h"
 
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-#include <fmt/format.h>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <string>
@@ -223,10 +221,11 @@ char *Preopens[] = {&PreopensVec[0], &PreopensVec[12], &PreopensVec[21],
                     &PreopensVec[32], &PreopensVec[49]};
 char TPath[] = "apiTestData/test.wasm";
 
-void HexToFile(cxx20::span<const uint8_t> Wasm, const char *Path) {
+void HexToFile(std::vector<uint8_t> &Wasm, const char *Path) {
   std::ofstream TFile(std::filesystem::u8path(Path), std::ios_base::binary);
-  TFile.write(reinterpret_cast<const char *>(Wasm.data()),
-              static_cast<std::streamsize>(Wasm.size()));
+  for (auto &Hex : Wasm) {
+    TFile << Hex;
+  }
   TFile.close();
 }
 
@@ -2372,7 +2371,7 @@ TEST(APICoreTest, ModuleInstance) {
   WasmEdge_MemoryInstanceContext *HostMemory = nullptr;
   WasmEdge_GlobalInstanceContext *HostGlobal = nullptr;
   auto HostFinalizer = [](void *Data) {
-    fmt::print("Data address: {}\n"sv, Data);
+    std::cout << "Data address: " << Data << std::endl;
   };
   WasmEdge_ValType Param[2], Result[1];
 
@@ -3369,16 +3368,16 @@ TEST(APICoreTest, VM) {
       WasmEdge_VMRunWasmFromASTModule(VM, Mod, FuncName, P, 2, nullptr, 1)));
 
   // VM get registered module
-  EXPECT_EQ(WasmEdge_VMListRegisteredModuleLength(VM), 17U);
+  EXPECT_EQ(WasmEdge_VMListRegisteredModuleLength(VM), 16U);
   EXPECT_EQ(WasmEdge_VMListRegisteredModuleLength(nullptr), 0U);
   EXPECT_EQ(WasmEdge_VMListRegisteredModule(nullptr, Names, 20), 0U);
-  EXPECT_EQ(WasmEdge_VMListRegisteredModule(VM, nullptr, 20), 17U);
+  EXPECT_EQ(WasmEdge_VMListRegisteredModule(VM, nullptr, 20), 16U);
   std::memset(Names, 0, sizeof(WasmEdge_String) * 20);
-  EXPECT_EQ(WasmEdge_VMListRegisteredModule(VM, Names, 1), 17U);
+  EXPECT_EQ(WasmEdge_VMListRegisteredModule(VM, Names, 1), 16U);
   EXPECT_EQ(std::string_view(Names[0].Buf, Names[0].Length), "extern"sv);
   EXPECT_EQ(std::string_view(Names[1].Buf, Names[1].Length), ""sv);
   std::memset(Names, 0, sizeof(WasmEdge_String) * 20);
-  EXPECT_EQ(WasmEdge_VMListRegisteredModule(VM, Names, 20), 17U);
+  EXPECT_EQ(WasmEdge_VMListRegisteredModule(VM, Names, 20), 16U);
   EXPECT_EQ(std::string_view(Names[0].Buf, Names[0].Length), "extern"sv);
   EXPECT_EQ(std::string_view(Names[1].Buf, Names[1].Length), "reg-wasm-ast"sv);
   EXPECT_EQ(std::string_view(Names[2].Buf, Names[2].Length),

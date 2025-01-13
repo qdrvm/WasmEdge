@@ -13,10 +13,16 @@ namespace WasmEdge {
 namespace Driver {
 
 void loadPlugins(void) {
-  Plugin::Plugin::loadFromDefaultPaths();
+  for (const auto &Path : Plugin::Plugin::getDefaultPluginPaths()) {
+    spdlog::info("Loading plugin path {}"sv, Path);
+    if (Plugin::Plugin::load(Path)) {
+      spdlog::info("Loaded plugin path {}"sv, Path);
+    } else {
+      spdlog::info("Nothing was loaded from plugin path {}"sv, Path);
+    }
+  }
   for (const auto &Plugin : Plugin::Plugin::plugins()) {
-    spdlog::info("Loaded Plugin: {} from path: {}", Plugin.name(),
-                 Plugin.path());
+    spdlog::info("Plugin: {}", Plugin.name());
   }
 }
 

@@ -1,9 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #include "avutil/avFrame.h"
 #include "avutil/module.h"
-
 #include "utils.h"
 
 #include <gtest/gtest.h>
@@ -13,6 +9,7 @@ namespace Host {
 namespace WasmEdgeFFmpeg {
 
 TEST_F(FFmpegTest, AVFrame) {
+
   uint32_t AVFramePtr = UINT32_C(72);
   uint32_t AVFrame2Ptr = UINT32_C(40);
   uint32_t DictPtr = UINT32_C(36);

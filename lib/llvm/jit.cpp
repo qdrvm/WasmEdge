@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
+// SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 #include "llvm/jit.h"
 #include "common/spdlog.h"
@@ -64,6 +64,8 @@ std::vector<Symbol<void>> JITLibrary::getCodes(size_t Offset,
 }
 
 Expect<std::shared_ptr<Executable>> JIT::load(Data D) noexcept {
+  spdlog::info("jit load start");
+
   OrcLLJIT J;
   if (auto Res = OrcLLJIT::create(); !Res) {
     spdlog::error("{}"sv, Res.error().message().string_view());
@@ -87,6 +89,8 @@ Expect<std::shared_ptr<Executable>> JIT::load(Data D) noexcept {
     spdlog::error("{}"sv, Err.message().string_view());
     return Unexpect(ErrCode::Value::HostFuncError);
   }
+
+  spdlog::info("jit load end");
 
   return std::make_shared<JITLibrary>(std::move(J));
 }

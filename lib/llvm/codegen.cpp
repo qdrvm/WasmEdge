@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
+// SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 #include "llvm/codegen.h"
 
@@ -482,7 +482,13 @@ Expect<void> outputWasmLibrary(LLVM::Context LLContext,
 
   spdlog::info("output start");
 
-  std::ofstream OS(OutputPath, std::ios_base::binary);
+  std::filesystem::path OutputPathTmp(OutputPath);
+  OutputPathTmp.replace_extension("%%%%%%%%%%.wasm");
+  OutputPathTmp = createTemp(OutputPathTmp);
+  if (OutputPathTmp.empty()) {
+    return WasmEdge::Unexpect(WasmEdge::ErrCode::Value::IllegalPath);
+  }
+  std::ofstream OS(OutputPathTmp, std::ios_base::binary);
   if (!OS) {
     spdlog::error("output failed.");
     return Unexpect(ErrCode::Value::IllegalPath);
@@ -495,6 +501,7 @@ Expect<void> outputWasmLibrary(LLVM::Context LLContext,
 
   std::error_code Error;
   std::filesystem::remove(SharedObjectName, Error);
+  std::filesystem::rename(OutputPathTmp, OutputPath);
 
   spdlog::info("output done");
   return {};

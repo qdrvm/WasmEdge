@@ -1,31 +1,32 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #pragma once
 
-#include "ffmpeg_base.h"
+#include "avutil_base.h"
+#include "runtime/callingframe.h"
 
 namespace WasmEdge {
 namespace Host {
 namespace WasmEdgeFFmpeg {
 namespace AVUtil {
 
-class AVUtilAVStrError : public HostFunction<AVUtilAVStrError> {
+class AVUtilAVStrError : public WasmEdgeFFmpegAVUtil<AVUtilAVStrError> {
 public:
-  using HostFunction::HostFunction;
+  AVUtilAVStrError(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, int32_t ErrNum,
                        uint32_t ErrBuf, uint32_t BufLen);
 };
 
-class AVUtilAVError : public HostFunction<AVUtilAVError> {
+class AVUtilAVError : public WasmEdgeFFmpegAVUtil<AVUtilAVError> {
 public:
-  using HostFunction::HostFunction;
+  AVUtilAVError(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, int32_t ErrNum);
 };
 
-class AVUtilAVUNError : public HostFunction<AVUtilAVUNError> {
+class AVUtilAVUNError : public WasmEdgeFFmpegAVUtil<AVUtilAVUNError> {
 public:
-  using HostFunction::HostFunction;
+  AVUtilAVUNError(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, int32_t ErrNum);
 };
 

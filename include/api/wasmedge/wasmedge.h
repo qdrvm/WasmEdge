@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
+// SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 //===-- wasmedge/wasmedge.h - WasmEdge C API ------------------------------===//
 //
@@ -1789,6 +1789,11 @@ WASMEDGE_CAPI_EXPORT extern WasmEdge_Result
 WasmEdge_LoaderSerializeASTModule(WasmEdge_LoaderContext *Cxt,
                                   const WasmEdge_ASTModuleContext *ASTCxt,
                                   WasmEdge_Bytes *Buf);
+
+WASMEDGE_CAPI_EXPORT extern WasmEdge_Result
+WasmEdge_LoaderPrepareForJIT(WasmEdge_LoaderContext *Ctx,
+                             WasmEdge_ASTModuleContext *ASTCxt,
+                             const WasmEdge_ConfigureContext *ConfCxt);
 
 /// Deletion of the WasmEdge_LoaderContext.
 ///
@@ -3983,9 +3988,9 @@ WASMEDGE_CAPI_EXPORT extern int WasmEdge_Driver_Tool(int Argc,
                                                      const char *Argv[]);
 
 #ifdef WASMEDGE_BUILD_WASI_NN_RPC
-/// Entrypoint for the WASI-NN RPC server tool.
+/// Entrypoint for the Wasi-NN RPC server tool.
 ///
-/// This function provides an entrypoint to the WasmEdge WASI-NN RPC server tool
+/// This function provides an entrypoint to the WasmEdge Wasi-NN RPC server tool
 /// with the command line arguments.
 ///
 /// \param Argc the argument count.

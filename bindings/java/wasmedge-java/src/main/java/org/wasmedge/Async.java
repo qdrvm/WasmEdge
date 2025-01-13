@@ -41,3 +41,4 @@ public class Async extends NativeResource {
 
     public native void close();
 }
+

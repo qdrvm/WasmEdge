@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
+// SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 //===-- wasmedge/common/enum.inc - Enumerations ---------------------------===//
 //
@@ -644,33 +644,6 @@ OFD(I32x4__trunc_sat_f64x2_u_zero, "i32x4.trunc_sat_f64x2_u_zero", 0xFD, 253)
 OFD(F64x2__convert_low_i32x4_s, "f64x2.convert_low_i32x4_s", 0xFD, 254)
 OFD(F64x2__convert_low_i32x4_u, "f64x2.convert_low_i32x4_u", 0xFD, 255)
 
-// 0xFE prefix - Relaxed SIMD Instructions (part 4)
-OFD(I8x16__relaxed_swizzle, "i8x16.relaxed_swizzle", 0xFD, 256)
-OFD(I32x4__relaxed_trunc_f32x4_s, "i32x4.relaxed_trunc_f32x4_s", 0xFD, 257)
-OFD(I32x4__relaxed_trunc_f32x4_u, "i32x4.relaxed_trunc_f32x4_u", 0xFD, 258)
-OFD(I32x4__relaxed_trunc_f64x2_s_zero, "i32x4.relaxed_trunc_f64x2_s_zero", 0xFD,
-    259)
-OFD(I32x4__relaxed_trunc_f64x2_u_zero, "i32x4.relaxed_trunc_f64x2_u_zero", 0xFD,
-    260)
-OFD(F32x4__relaxed_madd, "f32x4.relaxed_madd", 0xFD, 261)
-OFD(F32x4__relaxed_nmadd, "f32x4.relaxed_nmadd", 0xFD, 262)
-OFD(F64x2__relaxed_madd, "f32x4.relaxed_madd", 0xFD, 263)
-OFD(F64x2__relaxed_nmadd, "f32x4.relaxed_nmadd", 0xFD, 264)
-OFD(I8x16__relaxed_laneselect, "i8x16.relaxed_laneselect", 0xFD, 265)
-OFD(I16x8__relaxed_laneselect, "i16x8.relaxed_laneselect", 0xFD, 266)
-OFD(I32x4__relaxed_laneselect, "i32x4.relaxed_laneselect", 0xFD, 267)
-OFD(I64x2__relaxed_laneselect, "i64x2.relaxed_laneselect", 0xFD, 268)
-OFD(F32x4__relaxed_min, "f32x4.relaxed_min", 0xFD, 269)
-OFD(F32x4__relaxed_max, "f32x4.relaxed_max", 0xFD, 270)
-OFD(F64x2__relaxed_min, "f64x2.relaxed_min", 0xFD, 271)
-OFD(F64x2__relaxed_max, "f64x2.relaxed_max", 0xFD, 272)
-OFD(I16x8__relaxed_q15mulr_s, "i16x8.relaxed_q15mulr_s", 0xFD, 273)
-OFD(I16x8__relaxed_dot_i8x16_i7x16_s, "i16x8.relaxed_dot_i8x16_i7x16_s", 0xFD,
-    274)
-OFD(I32x4__relaxed_dot_i8x16_i7x16_add_s, "i32x4.relaxed_dot_i8x16_i7x16_add_s",
-    0xFD, 275)
-// 0xFD 276 ~ 303: Reserved
-
 // 0xFE prefix - Atomic instructions
 OFE(Memory__atomic__notify, "memory.atomic.notify", 0xFE, 0)
 OFE(Memory__atomic__wait32, "memory.atomic.wait32", 0xFE, 1)
@@ -820,8 +793,10 @@ E(NonNullRequired, 0x0009, "set null value into non-nullable value type")
 E(SetValueToConst, 0x000A, "set value into const")
 // Set value failed due to mismatch value type
 E(SetValueErrorType, 0x000B, "set value type mismatch")
+// JIT is disabled
+E(JITDisabled, 0x000C, "JIT is disabled in this build")
 // User defined error
-E(UserDefError, 0x000C, "user defined error code")
+E(UserDefError, 0x000D, "user defined error code")
 
 // Load phase
 // @{
@@ -885,8 +860,6 @@ E(SharedMemoryNoMax, 0x011A, "shared memory must have maximum")
 E(IntrinsicsTableNotFound, 0x011B, "intrinsics table not found")
 // Malformed table (Ref-types proposal)
 E(MalformedTable, 0x011C, "malformed table")
-// Alignment must < 64 without and < 128 with multi-memory proposal.
-E(InvalidStoreAlignment, 0x011D, "invalid store alignment")
 // @}
 
 // Validation phase
@@ -981,9 +954,6 @@ E(UnknownImport, 0x0302, "unknown import")
 E(DataSegDoesNotFit, 0x0303, "data segment does not fit")
 // Init failed when instantiating element segment
 E(ElemSegDoesNotFit, 0x0304, "elements segment does not fit")
-// Invalid core sort for component export
-E(InvalidCoreSort, 0x0305, "invalid core sort")
-E(InvalidCanonOption, 0x0306, "invalid canonical option")
 // @}
 
 // Execution phase
@@ -1042,7 +1012,7 @@ E(CastFailed, 0x0418, "cast failure")
 E(UncaughtException, 0x0419, "uncaught exception")
 // @}
 
-// Component model load phase
+// Component model phase
 // @{
 // Malformed sort
 E(MalformedSort, 0x0500, "malformed sort")
@@ -1068,11 +1038,6 @@ E(MalformedCanonical, 0x0509, "malformed canonical")
 E(UnknownCanonicalOption, 0x050A, "unknown canonical option")
 // Malformed name
 E(MalformedName, 0x050B, "malformed name")
-// @}
-
-// Component model instantiation phase
-// @{
-E(CoreInvalidExport, 0x0600, "invalid export in core module")
 // @}
 
 #undef E
@@ -1173,8 +1138,6 @@ T(Sub, 0x50, "sub")                // -0x30 for sub type
 T(SubFinal, 0x4F, "sub_final")     // -0x31 for sub type
 T(Rec, 0x4E, "rec")                // -0x32 for recursive type
 T(Epsilon, 0x40, "-")              // -0x40 for result type
-// component model types
-T(String, 0x80, "string") // string type
 
 #undef T
 #endif // UseTypeCode

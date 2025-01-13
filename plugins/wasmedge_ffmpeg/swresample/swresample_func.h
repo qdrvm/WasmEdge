@@ -1,39 +1,41 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #pragma once
 
-#include "ffmpeg_base.h"
+#include "ffmpeg_env.h"
+#include "runtime/callingframe.h"
+#include "swresample_base.h"
 
 namespace WasmEdge {
 namespace Host {
 namespace WasmEdgeFFmpeg {
 namespace SWResample {
 
-class SWResampleVersion : public HostFunction<SWResampleVersion> {
+class SWResampleVersion : public WasmEdgeFFmpegSWResample<SWResampleVersion> {
 public:
-  using HostFunction::HostFunction;
+  SWResampleVersion(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWResample(HostEnv) {}
   Expect<uint32_t> body(const Runtime::CallingFrame &Frame);
 };
 
-class SWRGetDelay : public HostFunction<SWRGetDelay> {
+class SWRGetDelay : public WasmEdgeFFmpegSWResample<SWRGetDelay> {
 public:
-  using HostFunction::HostFunction;
+  SWRGetDelay(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWResample(HostEnv) {}
   Expect<int64_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t SWRContextId, int64_t Base);
 };
 
-class SWRInit : public HostFunction<SWRInit> {
+class SWRInit : public WasmEdgeFFmpegSWResample<SWRInit> {
 public:
-  using HostFunction::HostFunction;
+  SWRInit(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWResample(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t SWRContextId);
 };
 
-class SWRAllocSetOpts : public HostFunction<SWRAllocSetOpts> {
+class SWRAllocSetOpts : public WasmEdgeFFmpegSWResample<SWRAllocSetOpts> {
 public:
-  using HostFunction::HostFunction;
-
+  SWRAllocSetOpts(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWResample(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t SwrCtxPtr,
                        uint32_t SWRContextId, uint64_t OutChLayout,
                        uint32_t OutSampleFmtId, int32_t OutSampleRate,
@@ -41,51 +43,60 @@ public:
                        int32_t InSampleRate, int32_t LogOffset);
 };
 
-class AVOptSetDict : public HostFunction<AVOptSetDict> {
+class AVOptSetDict : public WasmEdgeFFmpegSWResample<AVOptSetDict> {
 public:
-  using HostFunction::HostFunction;
+  AVOptSetDict(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWResample(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t SWRContextId, uint32_t DictId);
 };
 
-class SWRConvertFrame : public HostFunction<SWRConvertFrame> {
+class SWRConvertFrame : public WasmEdgeFFmpegSWResample<SWRConvertFrame> {
 public:
-  using HostFunction::HostFunction;
+  SWRConvertFrame(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWResample(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t SWRContextId, uint32_t FrameOutputId,
                        uint32_t FrameInputId);
 };
 
-class SWRFree : public HostFunction<SWRFree> {
+class SWRFree : public WasmEdgeFFmpegSWResample<SWRFree> {
 public:
-  using HostFunction::HostFunction;
+  SWRFree(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWResample(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t SWRContextId);
 };
 
 class SWResampleConfigurationLength
-    : public HostFunction<SWResampleConfigurationLength> {
+    : public WasmEdgeFFmpegSWResample<SWResampleConfigurationLength> {
 public:
-  using HostFunction::HostFunction;
+  SWResampleConfigurationLength(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWResample(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame);
 };
 
-class SWResampleConfiguration : public HostFunction<SWResampleConfiguration> {
+class SWResampleConfiguration
+    : public WasmEdgeFFmpegSWResample<SWResampleConfiguration> {
 public:
-  using HostFunction::HostFunction;
+  SWResampleConfiguration(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWResample(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t ConfigPtr,
                        uint32_t ConfigLen);
 };
 
-class SWResampleLicenseLength : public HostFunction<SWResampleLicenseLength> {
+class SWResampleLicenseLength
+    : public WasmEdgeFFmpegSWResample<SWResampleLicenseLength> {
 public:
-  using HostFunction::HostFunction;
+  SWResampleLicenseLength(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWResample(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame);
 };
 
-class SWResampleLicense : public HostFunction<SWResampleLicense> {
+class SWResampleLicense : public WasmEdgeFFmpegSWResample<SWResampleLicense> {
 public:
-  using HostFunction::HostFunction;
+  SWResampleLicense(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegSWResample(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t LicensePtr,
                        uint32_t LicenseLen);
 };

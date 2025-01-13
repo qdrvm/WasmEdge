@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
+// SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 //===-- wasmedge/runtime/instance/memory.h - Memory Instance definition ---===//
 //
@@ -46,14 +46,14 @@ public:
                  uint32_t PageLim = UINT32_C(65536)) noexcept
       : MemType(MType), PageLimit(PageLim) {
     if (MemType.getLimit().getMin() > PageLimit) {
-      spdlog::error("Memory Instance: Limited {} page in configuration.",
-                    PageLimit);
-      MemType.getLimit().setMin(PageLimit);
+      spdlog::error(
+          "Create memory instance failed -- exceeded limit page size: {}",
+          PageLimit);
+      return;
     }
     DataPtr = Allocator::allocate(MemType.getLimit().getMin());
     if (DataPtr == nullptr) {
-      spdlog::error("Memory Instance: Unable to find usable memory address.");
-      MemType.getLimit().setMin(0U);
+      spdlog::error("Unable to find usable memory address");
       return;
     }
   }
@@ -105,8 +105,7 @@ public:
     }
     assuming(PageLimit >= Min);
     if (Count > PageLimit - Min) {
-      spdlog::error("Memory Instance: Memory grow page failed, exceeded "
-                    "limited {} page size in configuration.",
+      spdlog::error("Memory grow page failed -- exceeded limit page size: {}",
                     PageLimit);
       return false;
     }

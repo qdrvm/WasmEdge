@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
+// SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 #include "loader/serialize.h"
 
@@ -679,28 +679,6 @@ Serializer::serializeInstruction(const AST::Instruction &Instr,
   case OpCode::F64x2__floor:
   case OpCode::F64x2__trunc:
   case OpCode::F64x2__nearest:
-    return {};
-
-  case OpCode::I8x16__relaxed_swizzle:
-  case OpCode::I32x4__relaxed_trunc_f32x4_s:
-  case OpCode::I32x4__relaxed_trunc_f32x4_u:
-  case OpCode::I32x4__relaxed_trunc_f64x2_s_zero:
-  case OpCode::I32x4__relaxed_trunc_f64x2_u_zero:
-  case OpCode::F32x4__relaxed_madd:
-  case OpCode::F32x4__relaxed_nmadd:
-  case OpCode::F64x2__relaxed_madd:
-  case OpCode::F64x2__relaxed_nmadd:
-  case OpCode::I8x16__relaxed_laneselect:
-  case OpCode::I16x8__relaxed_laneselect:
-  case OpCode::I32x4__relaxed_laneselect:
-  case OpCode::I64x2__relaxed_laneselect:
-  case OpCode::F32x4__relaxed_min:
-  case OpCode::F32x4__relaxed_max:
-  case OpCode::F64x2__relaxed_min:
-  case OpCode::F64x2__relaxed_max:
-  case OpCode::I16x8__relaxed_q15mulr_s:
-  case OpCode::I16x8__relaxed_dot_i8x16_i7x16_s:
-  case OpCode::I32x4__relaxed_dot_i8x16_i7x16_add_s:
     return {};
 
   // Atomic Memory Instructions.

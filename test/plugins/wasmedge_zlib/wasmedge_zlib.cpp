@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
+// SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 #include "common/defines.h"
 #include "runtime/instance/module.h"
@@ -11,36 +11,23 @@
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
-#include <memory>
 #include <string>
 #include <vector>
 
 namespace {
-
 WasmEdge::Runtime::CallingFrame DummyCallFrame(nullptr, nullptr);
 
-template <typename T, typename U>
-inline std::unique_ptr<T> dynamicPointerCast(std::unique_ptr<U> &&R) noexcept {
-  static_assert(std::has_virtual_destructor_v<T>);
-  T *P = dynamic_cast<T *>(R.get());
-  if (P) {
-    R.release();
-  }
-  return std::unique_ptr<T>(P);
-}
-
-std::unique_ptr<WasmEdge::Host::WasmEdgeZlibModule> createModule() {
+WasmEdge::Runtime::Instance::ModuleInstance *createModule() {
   using namespace std::literals::string_view_literals;
   WasmEdge::Plugin::Plugin::load(std::filesystem::u8path(
       "../../../plugins/wasmedge_zlib/" WASMEDGE_LIB_PREFIX
       "wasmedgePluginWasmEdgeZlib" WASMEDGE_LIB_EXTENSION));
   if (const auto *Plugin = WasmEdge::Plugin::Plugin::find("wasmedge_zlib"sv)) {
     if (const auto *Module = Plugin->findModule("wasmedge_zlib"sv)) {
-      return dynamicPointerCast<WasmEdge::Host::WasmEdgeZlibModule>(
-          Module->create());
+      return Module->create().release();
     }
   }
-  return {};
+  return nullptr;
 }
 
 } // namespace
@@ -62,8 +49,9 @@ constexpr auto RandChar = []() -> char {
 };
 
 TEST(WasmEdgeZlibTest, DeflateInflateCycle) {
-  auto ZlibMod = createModule();
-  ASSERT_TRUE(ZlibMod);
+  auto *ZlibMod =
+      dynamic_cast<WasmEdge::Host::WasmEdgeZlibModule *>(createModule());
+  ASSERT_TRUE(ZlibMod != nullptr);
 
   // Create the calling frame with memory instance.
   WasmEdge::Runtime::Instance::ModuleInstance Mod("");
@@ -262,9 +250,9 @@ TEST(WasmEdgeZlibTest, DeflateInflateCycle) {
 
 TEST(WasmEdgeZlibTest, Module) {
   // Create the wasmedge_zlib module instance.
-  auto ZlibMod = createModule();
-  ASSERT_TRUE(ZlibMod);
-
+  auto *ZlibMod =
+      dynamic_cast<WasmEdge::Host::WasmEdgeZlibModule *>(createModule());
+  EXPECT_FALSE(ZlibMod == nullptr);
   EXPECT_TRUE(ZlibMod->getEnv().ZStreamMap.empty());
   EXPECT_EQ(ZlibMod->getFuncExportNum(), 76U);
 
@@ -344,6 +332,8 @@ TEST(WasmEdgeZlibTest, Module) {
   EXPECT_NE(ZlibMod->findFuncExports("inflateCodesUsed"), nullptr);
   EXPECT_NE(ZlibMod->findFuncExports("inflateResetKeep"), nullptr);
   EXPECT_NE(ZlibMod->findFuncExports("deflateResetKeep"), nullptr);
+
+  delete ZlibMod;
 }
 
 GTEST_API_ int main(int ArgC, char **ArgV) {

@@ -1,91 +1,101 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #pragma once
-
-#include "ffmpeg_base.h"
+#include "avutil_base.h"
+#include "runtime/callingframe.h"
 
 namespace WasmEdge {
 namespace Host {
 namespace WasmEdgeFFmpeg {
 namespace AVUtil {
 
-class AVGetPlanarSampleFmt : public HostFunction<AVGetPlanarSampleFmt> {
+class AVGetPlanarSampleFmt : public WasmEdgeFFmpegAVUtil<AVGetPlanarSampleFmt> {
 public:
-  using HostFunction::HostFunction;
+  AVGetPlanarSampleFmt(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<uint32_t> body(const Runtime::CallingFrame &Frame,
                         uint32_t SampleFormatId);
 };
 
-class AVGetPackedSampleFmt : public HostFunction<AVGetPackedSampleFmt> {
+class AVGetPackedSampleFmt : public WasmEdgeFFmpegAVUtil<AVGetPackedSampleFmt> {
 public:
-  using HostFunction::HostFunction;
+  AVGetPackedSampleFmt(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<uint32_t> body(const Runtime::CallingFrame &Frame,
                         uint32_t SampleFormatId);
 };
 
-class AVSampleFmtIsPlanar : public HostFunction<AVSampleFmtIsPlanar> {
+class AVSampleFmtIsPlanar : public WasmEdgeFFmpegAVUtil<AVSampleFmtIsPlanar> {
 public:
-  using HostFunction::HostFunction;
+  AVSampleFmtIsPlanar(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<uint32_t> body(const Runtime::CallingFrame &Frame,
                         uint32_t SampleFormatId);
 };
 
-class AVGetBytesPerSample : public HostFunction<AVGetBytesPerSample> {
+class AVGetBytesPerSample : public WasmEdgeFFmpegAVUtil<AVGetBytesPerSample> {
 public:
-  using HostFunction::HostFunction;
+  AVGetBytesPerSample(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t SampleFormatId);
 };
 
-class AVGetSampleFmt : public HostFunction<AVGetSampleFmt> {
+class AVGetSampleFmt : public WasmEdgeFFmpegAVUtil<AVGetSampleFmt> {
 public:
-  using HostFunction::HostFunction;
+  AVGetSampleFmt(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t Str,
                        uint32_t StrLen);
 };
 
-class AVSamplesGetBufferSize : public HostFunction<AVSamplesGetBufferSize> {
+class AVSamplesGetBufferSize
+    : public WasmEdgeFFmpegAVUtil<AVSamplesGetBufferSize> {
 public:
-  using HostFunction::HostFunction;
+  AVSamplesGetBufferSize(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, int32_t NbChannels,
                        int32_t NbSamples, uint32_t SampleFormatId,
                        int32_t Align);
 };
 
 class AVSamplesAllocArrayAndSamples
-    : public HostFunction<AVSamplesAllocArrayAndSamples> {
+    : public WasmEdgeFFmpegAVUtil<AVSamplesAllocArrayAndSamples> {
 public:
-  using HostFunction::HostFunction;
+  AVSamplesAllocArrayAndSamples(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t BufferPtr,
                        uint32_t LinesizePtr, int32_t NbChannels,
                        int32_t NbSamples, uint32_t SampleFmtId, int32_t Align);
 };
 
-class AVGetSampleFmtNameLength : public HostFunction<AVGetSampleFmtNameLength> {
+class AVGetSampleFmtNameLength
+    : public WasmEdgeFFmpegAVUtil<AVGetSampleFmtNameLength> {
 public:
-  using HostFunction::HostFunction;
+  AVGetSampleFmtNameLength(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t SampleFmtId);
 };
 
-class AVGetSampleFmtName : public HostFunction<AVGetSampleFmtName> {
+class AVGetSampleFmtName : public WasmEdgeFFmpegAVUtil<AVGetSampleFmtName> {
 public:
-  using HostFunction::HostFunction;
+  AVGetSampleFmtName(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t SampleFmtId,
                        uint32_t SampleFmtNamePtr, uint32_t SampleFmtNameLen);
 };
 
-class AVGetSampleFmtMask : public HostFunction<AVGetSampleFmtMask> {
+class AVGetSampleFmtMask : public WasmEdgeFFmpegAVUtil<AVGetSampleFmtMask> {
 public:
-  using HostFunction::HostFunction;
+  AVGetSampleFmtMask(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame,
                        uint32_t SampleFmtId);
 };
 
-class AVFreep : public HostFunction<AVFreep> {
+class AVFreep : public WasmEdgeFFmpegAVUtil<AVFreep> {
 public:
-  using HostFunction::HostFunction;
+  AVFreep(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVUtil(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t BufferId);
 };
 

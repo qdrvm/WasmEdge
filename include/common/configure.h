@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
+// SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 //===-- wasmedge/common/configure.h - Configuration class -----------------===//
 //
@@ -328,12 +328,6 @@ public:
       // These instructions are for SIMD proposal.
       if (!hasProposal(Proposal::SIMD)) {
         return Proposal::SIMD;
-      }
-    } else if (Code >= OpCode::I8x16__relaxed_swizzle &&
-               Code <= OpCode::I32x4__relaxed_dot_i8x16_i7x16_add_s) {
-      // These instructions are for Relaxed SIMD proposal.
-      if (!hasProposal(Proposal::RelaxSIMD)) {
-        return Proposal::RelaxSIMD;
       }
     } else if (Code == OpCode::Return_call ||
                Code == OpCode::Return_call_indirect) {

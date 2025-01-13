@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
+// SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 #include "wasinnfunc.h"
 #include "common/spdlog.h"
@@ -36,16 +36,6 @@ Expect<WASINN::ErrNo> load(WASINN::WasiNNEnvironment &Env,
     return WASINN::ErrNo::InvalidEncoding;
   }
 }
-#ifdef WASMEDGE_BUILD_WASI_NN_RPC
-WASINN::ErrNo metadataToErrNo(
-    const std::multimap<grpc::string_ref, grpc::string_ref> &Metadata) {
-  if (Metadata.find("errno") != Metadata.end()) {
-    auto ErrNo = std::stoi(Metadata.find("errno")->second.data());
-    return static_cast<WASINN::ErrNo>(ErrNo);
-  }
-  return WASINN::ErrNo::Success;
-}
-#endif // #ifdef WASMEDGE_BUILD_WASI_NN_RPC
 } // namespace
 
 Expect<WASINN::ErrNo>
@@ -146,8 +136,9 @@ WasiNNLoadByName::bodyImpl(const Runtime::CallingFrame &Frame, uint32_t NamePtr,
     wasi_ephemeral_nn::LoadByNameResult Res;
     auto Status = Stub->LoadByName(&ClientContext, Req, &Res);
     if (!Status.ok()) {
-      auto Metadata = ClientContext.GetServerTrailingMetadata();
-      return metadataToErrNo(Metadata);
+      spdlog::error("[WASI-NN] Failed when calling remote LoadByName: {}"sv,
+                    Status.error_message());
+      return WASINN::ErrNo::RuntimeError;
     }
     *GraphId = Res.graph_handle();
     return WASINN::ErrNo::Success;
@@ -205,8 +196,10 @@ Expect<WASINN::ErrNo> WasiNNLoadByNameWithConfig::bodyImpl(
     wasi_ephemeral_nn::LoadByNameWithConfigResult Res;
     auto Status = Stub->LoadByNameWithConfig(&ClientContext, Req, &Res);
     if (!Status.ok()) {
-      auto Metadata = ClientContext.GetServerTrailingMetadata();
-      return metadataToErrNo(Metadata);
+      spdlog::error(
+          "[WASI-NN] Failed when calling remote LoadByNameWithConfig: {}"sv,
+          Status.error_message());
+      return WASINN::ErrNo::RuntimeError;
     }
     *GraphId = Res.graph_handle();
     return WASINN::ErrNo::Success;
@@ -249,8 +242,10 @@ WasiNNInitExecCtx::bodyImpl(const Runtime::CallingFrame &Frame,
     wasi_ephemeral_nn::InitExecutionContextResult Res;
     auto Status = Stub->InitExecutionContext(&ClientContext, Req, &Res);
     if (!Status.ok()) {
-      auto Metadata = ClientContext.GetServerTrailingMetadata();
-      return metadataToErrNo(Metadata);
+      spdlog::error(
+          "[WASI-NN] Failed when calling remote InitExecutionContext: {}"sv,
+          Status.error_message());
+      return WASINN::ErrNo::RuntimeError;
     }
     *Context = Res.ctx_handle();
     return WASINN::ErrNo::Success;
@@ -344,8 +339,9 @@ WasiNNSetInput::bodyImpl(const Runtime::CallingFrame &Frame, uint32_t Context,
     google::protobuf::Empty Res;
     auto Status = Stub->SetInput(&ClientContext, Req, &Res);
     if (!Status.ok()) {
-      auto Metadata = ClientContext.GetServerTrailingMetadata();
-      return metadataToErrNo(Metadata);
+      spdlog::error("[WASI-NN] Failed when calling remote SetInput: {}"sv,
+                    Status.error_message());
+      return WASINN::ErrNo::RuntimeError;
     }
     return WASINN::ErrNo::Success;
   }
@@ -401,8 +397,9 @@ WasiNNGetOutput::bodyImpl(const Runtime::CallingFrame &Frame, uint32_t Context,
     wasi_ephemeral_nn::GetOutputResult Res;
     auto Status = Stub->GetOutput(&ClientContext, Req, &Res);
     if (!Status.ok()) {
-      auto Metadata = ClientContext.GetServerTrailingMetadata();
-      return metadataToErrNo(Metadata);
+      spdlog::error("[WASI-NN] Failed when calling remote GetOutput: {}"sv,
+                    Status.error_message());
+      return WASINN::ErrNo::RuntimeError;
     }
     uint32_t BytesWrittenVal =
         std::min(static_cast<uint32_t>(Res.data().size()), OutBufferMaxSize);
@@ -433,9 +430,23 @@ Expect<WASINN::ErrNo> WasiNNGetOutputSingle::bodyImpl(
     const Runtime::CallingFrame &Frame, uint32_t Context, uint32_t Index,
     uint32_t OutBufferPtr, uint32_t OutBufferMaxSize,
     uint32_t BytesWrittenPtr) {
+#ifdef WASMEDGE_BUILD_WASI_NN_RPC
+  if (Env.NNRPCChannel != nullptr) {
+    // TODO: implement RPC for GetOutputSingle
+    spdlog::error(
+        "[WASI-NN] RPC client is not implemented for GetOutputSingle"sv);
+    return WASINN::ErrNo::UnsupportedOperation;
+  }
+#endif
   auto *MemInst = Frame.getMemoryByIndex(0);
   if (MemInst == nullptr) {
     return Unexpect(ErrCode::Value::HostFuncError);
+  }
+
+  if (Env.NNContext.size() <= Context) {
+    spdlog::error(
+        "[WASI-NN] get_output_single: Execution Context does not exist"sv);
+    return WASINN::ErrNo::InvalidArgument;
   }
 
   const auto OutBuffer =
@@ -448,34 +459,6 @@ Expect<WASINN::ErrNo> WasiNNGetOutputSingle::bodyImpl(
   uint32_t *BytesWritten = MemInst->getPointer<uint32_t *>(BytesWrittenPtr);
   if (unlikely(BytesWritten == nullptr)) {
     spdlog::error("[WASI-NN] Failed when accessing the BytesWritten memory."sv);
-    return WASINN::ErrNo::InvalidArgument;
-  }
-
-#ifdef WASMEDGE_BUILD_WASI_NN_RPC
-  if (Env.NNRPCChannel != nullptr) {
-    auto Stub = wasi_ephemeral_nn::GraphExecutionContextResource::NewStub(
-        Env.NNRPCChannel);
-    grpc::ClientContext ClientContext;
-    wasi_ephemeral_nn::GetOutputRequest Req;
-    Req.set_resource_handle(Context);
-    Req.set_index(Index);
-    wasi_ephemeral_nn::GetOutputResult Res;
-    auto Status = Stub->GetOutputSingle(&ClientContext, Req, &Res);
-    if (!Status.ok()) {
-      auto Metadata = ClientContext.GetServerTrailingMetadata();
-      return metadataToErrNo(Metadata);
-    }
-    uint32_t BytesWrittenVal =
-        std::min(static_cast<uint32_t>(Res.data().size()), OutBufferMaxSize);
-    std::copy_n(Res.data().begin(), BytesWrittenVal, OutBuffer.begin());
-    *BytesWritten = BytesWrittenVal;
-    return WASINN::ErrNo::Success;
-  }
-#endif // ifdef WASMEDGE_BUILD_WASI_NN_RPC
-
-  if (Env.NNContext.size() <= Context) {
-    spdlog::error(
-        "[WASI-NN] get_output_single: Execution Context does not exist"sv);
     return WASINN::ErrNo::InvalidArgument;
   }
 
@@ -502,8 +485,9 @@ WasiNNCompute::bodyImpl(const Runtime::CallingFrame &Frame, uint32_t Context) {
     google::protobuf::Empty Res;
     auto Status = Stub->Compute(&ClientContext, Req, &Res);
     if (!Status.ok()) {
-      auto Metadata = ClientContext.GetServerTrailingMetadata();
-      return metadataToErrNo(Metadata);
+      spdlog::error("[WASI-NN] Failed when calling remote Compute: {}"sv,
+                    Status.error_message());
+      return WASINN::ErrNo::RuntimeError;
     }
     return WASINN::ErrNo::Success;
   }
@@ -535,20 +519,12 @@ WasiNNComputeSingle::bodyImpl(const Runtime::CallingFrame &Frame,
                               uint32_t Context) {
 #ifdef WASMEDGE_BUILD_WASI_NN_RPC
   if (Env.NNRPCChannel != nullptr) {
-    auto Stub = wasi_ephemeral_nn::GraphExecutionContextResource::NewStub(
-        Env.NNRPCChannel);
-    grpc::ClientContext ClientContext;
-    wasi_ephemeral_nn::ComputeRequest Req;
-    Req.set_resource_handle(Context);
-    google::protobuf::Empty Res;
-    auto Status = Stub->ComputeSingle(&ClientContext, Req, &Res);
-    if (!Status.ok()) {
-      auto Metadata = ClientContext.GetServerTrailingMetadata();
-      return metadataToErrNo(Metadata);
-    }
-    return WASINN::ErrNo::Success;
+    // TODO: implement RPC for ComputeSingle
+    spdlog::error(
+        "[WASI-NN] RPC client is not implemented for ComputeSingle"sv);
+    return WASINN::ErrNo::UnsupportedOperation;
   }
-#endif // ifdef WASMEDGE_BUILD_WASI_NN_RPC
+#endif
   auto *MemInst = Frame.getMemoryByIndex(0);
   if (MemInst == nullptr) {
     return Unexpect(ErrCode::Value::HostFuncError);
@@ -575,20 +551,11 @@ WasiNNFiniSingle::bodyImpl(const Runtime::CallingFrame &Frame,
                            uint32_t Context) {
 #ifdef WASMEDGE_BUILD_WASI_NN_RPC
   if (Env.NNRPCChannel != nullptr) {
-    auto Stub = wasi_ephemeral_nn::GraphExecutionContextResource::NewStub(
-        Env.NNRPCChannel);
-    grpc::ClientContext ClientContext;
-    wasi_ephemeral_nn::FiniSingleRequest Req;
-    Req.set_resource_handle(Context);
-    google::protobuf::Empty Res;
-    auto Status = Stub->FiniSingle(&ClientContext, Req, &Res);
-    if (!Status.ok()) {
-      auto Metadata = ClientContext.GetServerTrailingMetadata();
-      return metadataToErrNo(Metadata);
-    }
-    return WASINN::ErrNo::Success;
+    // TODO: implement RPC for FiniSingle
+    spdlog::error("[WASI-NN] RPC client is not implemented for FiniSingle"sv);
+    return WASINN::ErrNo::UnsupportedOperation;
   }
-#endif // ifdef WASMEDGE_BUILD_WASI_NN_RPC
+#endif
   auto *MemInst = Frame.getMemoryByIndex(0);
   if (MemInst == nullptr) {
     return Unexpect(ErrCode::Value::HostFuncError);
@@ -631,13 +598,8 @@ Expect<WASINN::ErrNo> WasiNNUnload::bodyImpl(const Runtime::CallingFrame &Frame,
   switch (Env.NNGraph[GraphId].getBackend()) {
   case WASINN::Backend::GGML:
     return WASINN::GGML::unload(Env, GraphId);
-  case WASINN::Backend::NeuralSpeed:
-    return WASINN::NeuralSpeed::unload(Env, GraphId);
-  case WASINN::Backend::ChatTTS:
-    return WASINN::ChatTTS::unload(Env, GraphId);
   default:
-    spdlog::error(
-        "[WASI-NN] unlaod: Only GGML, Neural speed, and ChatTTS backend supports unload."sv);
+    spdlog::error("[WASI-NN] unlaod: Only GGML backend supports unload."sv);
     return WASINN::ErrNo::InvalidArgument;
   }
 }

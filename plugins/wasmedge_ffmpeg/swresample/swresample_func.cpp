@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #include "swresample_func.h"
 
 extern "C" {
@@ -20,12 +17,14 @@ Expect<uint32_t> SWResampleVersion::body(const Runtime::CallingFrame &) {
 
 Expect<int64_t> SWRGetDelay::body(const Runtime::CallingFrame &,
                                   uint32_t SWRContextId, int64_t Base) {
+
   FFMPEG_PTR_FETCH(SWRContext, SWRContextId, SwrContext);
   return swr_get_delay(SWRContext, Base);
 }
 
 Expect<int32_t> SWRInit::body(const Runtime::CallingFrame &,
                               uint32_t SWRContextId) {
+
   FFMPEG_PTR_FETCH(SWRContext, SWRContextId, SwrContext);
   return swr_init(SWRContext);
 }
@@ -36,6 +35,7 @@ SWRAllocSetOpts::body(const Runtime::CallingFrame &Frame, uint32_t SwrCtxPtr,
                       uint32_t OutSampleFmtId, int32_t OutSampleRate,
                       uint64_t InChLayoutId, uint32_t InSampleFmtId,
                       int32_t InSampleRate, int32_t LogOffset) {
+
   MEMINST_CHECK(MemInst, Frame, 0);
   MEM_PTR_CHECK(SwrCtxId, MemInst, uint32_t, SwrCtxPtr, "")
   FFMPEG_PTR_FETCH(CurrSwrCtx, *SwrCtxId, SwrContext);
@@ -59,6 +59,7 @@ SWRAllocSetOpts::body(const Runtime::CallingFrame &Frame, uint32_t SwrCtxPtr,
 
 Expect<int32_t> AVOptSetDict::body(const Runtime::CallingFrame &,
                                    uint32_t SWRContextId, uint32_t DictId) {
+
   FFMPEG_PTR_FETCH(SWRContext, SWRContextId, SwrContext);
   FFMPEG_PTR_FETCH(AvDictionary, DictId, AVDictionary *);
   return av_opt_set_dict(SWRContext, AvDictionary);
@@ -92,6 +93,7 @@ SWResampleConfigurationLength::body(const Runtime::CallingFrame &) {
 Expect<int32_t>
 SWResampleConfiguration::body(const Runtime::CallingFrame &Frame,
                               uint32_t ConfigPtr, uint32_t ConfigLen) {
+
   MEMINST_CHECK(MemInst, Frame, 0);
   MEM_SPAN_CHECK(ConfigBuf, MemInst, char, ConfigPtr, ConfigLen, "");
 
@@ -101,6 +103,7 @@ SWResampleConfiguration::body(const Runtime::CallingFrame &Frame,
 }
 
 Expect<int32_t> SWResampleLicenseLength::body(const Runtime::CallingFrame &) {
+
   const char *License = swresample_license();
   return strlen(License);
 }
@@ -108,6 +111,7 @@ Expect<int32_t> SWResampleLicenseLength::body(const Runtime::CallingFrame &) {
 Expect<int32_t> SWResampleLicense::body(const Runtime::CallingFrame &Frame,
                                         uint32_t LicensePtr,
                                         uint32_t LicenseLen) {
+
   MEMINST_CHECK(MemInst, Frame, 0);
   MEM_SPAN_CHECK(LicenseBuf, MemInst, char, LicensePtr, LicenseLen, "");
 

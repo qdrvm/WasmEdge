@@ -1,11 +1,7 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #include "swresample/swresample_func.h"
 #include "swresample/module.h"
 
 #include "utils.h"
-
 #include <gtest/gtest.h>
 
 namespace WasmEdge {
@@ -13,6 +9,7 @@ namespace Host {
 namespace WasmEdgeFFmpeg {
 
 TEST_F(FFmpegTest, SWResampleFunc) {
+
   ASSERT_TRUE(SWResampleMod != nullptr);
 
   uint32_t DictPtr = UINT32_C(4);

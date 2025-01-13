@@ -28,44 +28,38 @@ eprintf() {
 	command printf '%s\n' "$1" 1>&2
 }
 
-get_cuda_version() {
-	local cuda=""
-	cuda=$($1 --version 2>/dev/null | grep "Cuda compilation tools" | cut -f5 -d ' ' | cut -f1 -d ',')
-	echo ${cuda}
-}
-
 detect_cuda_nvcc() {
 	local cuda=""
-	if [[ "${BY_PASS_CUDA_VERSION}" != "0" ]]; then
-		cuda="${BY_PASS_CUDA_VERSION}"
-	else
-		nvcc_paths=("nvcc" "/usr/local/cuda/bin/nvcc" "/opt/cuda/bin/nvcc")
-		for nvcc_path in "${nvcc_paths[@]}"
-		do
-			cuda=$(get_cuda_version ${nvcc_path})
-			if [[ "${cuda}" =~ "12" ]]; then
-				cuda="12"
-				break
-			elif [[ "${cuda}" =~ "11" ]]; then
-				cuda="11"
-				break
-			fi
-		done
+	cuda=$(/usr/local/cuda/bin/nvcc --version 2>/dev/null | grep "Cuda compilation tools" | cut -f5 -d ' ' | cut -f1 -d ',')
+	if [[ "${cuda}" =~ "12" ]]; then
+		cuda="12"
+	elif [[ "${cuda}" =~ "11" ]]; then
+		cuda="11"
 	fi
 
 	echo ${cuda}
 }
 
-detect_libcudart() {
-	local cudart="0"
-	LIBCUDART_PATH="/usr/local/cuda/lib64/libcudart.so"
-	if [[ "${BY_PASS_CUDA_VERSION}" != "0" ]]; then
-		cudart="1"
-	elif [ -f ${LIBCUDART_PATH} ]; then
-		cudart="1"
+detect_cuda_nvidia_smi() {
+	local cuda=""
+	cuda=$(nvidia-smi -q 2>/dev/null | grep CUDA | cut -f2 -d ':' | cut -f2 -d ' ')
+	if [[ "${cuda}" =~ "12" ]]; then
+		cuda="12"
+	elif [[ "${cuda}" =~ "11" ]]; then
+		cuda="11"
 	fi
 
-	echo ${cudart}
+	echo ${cuda}
+}
+
+detect_cuda() {
+	local cuda=""
+	cuda=$(detect_cuda_nvcc)
+	if [[ "${cuda}" == "" ]]; then
+		cuda=$(detect_cuda_nvidia_smi)
+	fi
+
+	echo ${cuda}
 }
 
 _realpath() {
@@ -149,7 +143,7 @@ if [ "$__HOME__" = "" ]; then
 fi
 
 get_latest_release() {
-	echo "0.14.0"
+	echo "0.13.5"
 }
 
 VERSION=$(get_latest_release)
@@ -208,11 +202,9 @@ check_os_arch() {
 IPATH="$__HOME__/.wasmedge"
 VERBOSE=0
 LEGACY=0
+ENABLE_RUSTLS=0
 ENABLE_NOAVX=0
 GGML_BUILD_NUMBER=""
-DISABLE_WASI_LOGGING="0"
-BY_PASS_CUDA_VERSION="0"
-BY_PASS_CUDART="0"
 
 set_ENV() {
 	ENV="#!/bin/sh
@@ -284,36 +276,33 @@ usage() {
 	Mandatory arguments to long options are mandatory for short options too.
 	Long options should be assigned with '='
 
-	-h,             --help                          Display help
+	-h,             --help                      Display help
 
-	-l,             --legacy                        Enable legacy OS support.
-														E.g., CentOS 7.
+	--legacy                                    Enable legacy OS support.
+													E.g., CentOS 7.
 
-	-v,             --version                       Install the specific version.
+	-v,             --version                   Install the specific version.
 
-	-V,             --verbose                       Run script in verbose mode.
-														Will print out each step
-														of execution.
+	-V,             --verbose                   Run script in verbose mode.
+													Will print out each step
+													of execution.
 
-	-p,             --path=[/usr/local]             Prefix / Path to install
+	-p,             --path=[/usr/local]         Prefix / Path to install
 
-	--noavx                                         Install the GGML noavx plugin.
-														Default is disabled.
+	--noavx                                     Install the GGML noavx plugin.
+													Default is disabled.
 
-	-b,             --ggmlbn=[b2963]                Install the specific GGML plugin.
-														Default is the latest.
+	--rustls                                    Install the Rustls plugin.
+													Default is disabled.
 
-	-c,             --ggmlcuda=[11/12]              Install the specific CUDA enabled GGML plugin.
-														Default is the none.
+	--ggmlbn=[b2963]                            Install the specific GGML plugin.
+													Default is the latest.
 
-	-o,             --os=[Linux/Darwin]             Set the OS.
-														Default is detected OS.
+	--os=[Linux/Darwin]                         Set the OS.
+													Default is detected OS.
 
-	-a,             --arch=[x86_64/aarch64/arm64]   Set the ARCH.
-														Default is detected ARCH.
-
-	-t,             --tmpdir=[/tmp]                 Set the temporary directory.
-														Default is /tmp.
+	--arch[x86_64/aarch64/arm64]                Set the ARCH.
+													Default is detected ARCH.
 
 	Example:
 	./$0 -p $IPATH --verbose
@@ -406,24 +395,19 @@ get_wasmedge_ggml_plugin() {
 		info "NOAVX option is given: Use the noavx CPU version."
 		NOAVX_EXT="-noavx"
 	else
-		cuda=$(detect_cuda_nvcc)
-		cudart=$(detect_libcudart)
-		info "Detected CUDA version from nvcc: ${cuda}"
-		if [ "${cuda}" == "" ]; then
-			info "CUDA version is not detected from nvcc: Use the CPU version."
-			info "Or you can use '-c 11' or '-c 12' to install the cuda-11 or cuda-12 version manually."
-		elif [ "${cudart}" == "0" ]; then
-			info "libcudart.so is not found in the default installation path of CUDA: Use the CPU version."
-			info "Or you can use '-c 11' or '-c 12' to install the cuda-11 or cuda-12 version manually."
-			cuda="" # Reset cuda detection result because of the libcudart.so is not found.
-		fi
+		cuda=$(detect_cuda)
+		info "Detected CUDA version: ${cuda}"
+		info "CUDA version from nvcc: $(detect_cuda_nvcc)"
+		info "CUDA version from nvidia-smi: $(detect_cuda_nvidia_smi)"
 
 		if [ "${cuda}" == "12" ]; then
-			info "CUDA version 12 is detected from nvcc: Use the GPU version."
 			CUDA_EXT="-cuda"
 		elif [ "${cuda}" == "11" ]; then
-			info "CUDA version 11 is detected from nvcc: Use the GPU version."
-			CUDA_EXT="-cuda-11"
+			if [ "${ARCH}" == "aarch64" ]; then
+				CUDA_EXT="-cuda"
+			else
+				CUDA_EXT="-cuda-11"
+			fi
 		else
 			CUDA_EXT=""
 		fi
@@ -442,25 +426,32 @@ get_wasmedge_ggml_plugin() {
 	_extractor -C "${TMP_PLUGIN_DIR}" -vxzf "${TMP_DIR}/WasmEdge-plugin-wasi_nn-ggml${CUDA_EXT}${NOAVX_EXT}-${VERSION}-${RELEASE_PKG}"
 }
 
-get_wasmedge_wasi_logging_plugin() {
-	info "Fetching WASI-Logging-Plugin"
-	_downloader "https://github.com/WasmEdge/WasmEdge/releases/download/$VERSION/WasmEdge-plugin-wasi_logging-$VERSION-$RELEASE_PKG"
+get_wasmedge_rustls_plugin() {
+	info "Fetching WasmEdge-Rustls-Plugin"
+	_downloader "https://github.com/WasmEdge/WasmEdge/releases/download/$VERSION/WasmEdge-plugin-wasmedge_rustls-$VERSION-$RELEASE_PKG"
 	local TMP_PLUGIN_DIR="${TMP_DIR}/${IPKG}/plugin"
 	mkdir -p "${TMP_PLUGIN_DIR}"
-	_extractor -C "${TMP_PLUGIN_DIR}" -vxzf "${TMP_DIR}/WasmEdge-plugin-wasi_logging-${VERSION}-${RELEASE_PKG}"
+	_extractor -C "${TMP_PLUGIN_DIR}" -vxzf "${TMP_DIR}/WasmEdge-plugin-wasmedge_rustls-${VERSION}-${RELEASE_PKG}"
 }
 
 wasmedge_checks() {
 	if [ "${ARCH}" == $(uname -m) ] && [ "${OS}" == $(uname) ] ; then
 		# Check only MAJOR.MINOR.PATCH
 		local version=$1
-
-		if [ -f "$IPATH/bin/wasmedge" ]; then
-			info "Installation of wasmedge-${version} successful"
-		else
-			error "WasmEdge-${version} isn't found in the installation folder ${IPATH}"
-			exit 1
-		fi
+		shift
+		for var in "$@"; do
+			if [ "$var" == "" ]; then
+				continue
+			fi
+			local V=$("$IPATH/bin/$var" --version | sed 's/^.*[^0-9]\([0-9]*\.[0-9]*\.[0-9]*\).*$/\1/')
+			local V_=$(echo $version | sed 's/\([0-9]*\.[0-9]*\.[0-9]*\).*$/\1/')
+			if [ "$V" = "$V_" ]; then
+				echo "${GREEN}Installation of $var-$version successful${NC}"
+			else
+				echo "${YELLOW}version $V_ does not match $V for $var-$version${NC}"
+				exit 1
+			fi
+		done
 	fi
 	# Bypass if cross compile
 }
@@ -473,8 +464,7 @@ main() {
 	# it'll probably be fine, but it's of course a good thing to keep in mind.
 
 	local OPTIND
-	OPTLIST="e:h:l:v:p:b:c:o:a:t:V-:"
-	while getopts $OPTLIST OPT; do
+	while getopts "e:hp:v:r:u:V-:" OPT; do
 		# support long options: https://stackoverflow.com/a/28466267/519360
 		if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
 			OPT="${OPTARG%%=*}"     # extract long option name
@@ -499,27 +489,20 @@ main() {
 			p | path)
 				IPATH="$(_realpath "${OPTARG}")"
 				;;
-			b | ggmlbn)
+			ggmlbn)
 				GGML_BUILD_NUMBER="${OPTARG}"
-				;;
-			nowasilogging)
-				DISABLE_WASI_LOGGING="1"
-				;;
-			c | ggmlcuda)
-				BY_PASS_CUDA_VERSION="${OPTARG}"
-				BY_PASS_CUDART="1"
 				;;
 			noavx)
 				ENABLE_NOAVX=1
 				;;
-			o | os)
+			rustls)
+				ENABLE_RUSTLS=1
+				;;
+			os)
 				OS="${OPTARG^}"
 				;;
-			a | arch)
+			arch)
 				ARCH="${OPTARG}"
-				;;
-			t | tmpdir)
-				TMP_DIR="${OPTARG}"
 				;;
 			?)
 				exit 2
@@ -577,8 +560,6 @@ main() {
 	elif [[ "$_shell_" =~ "bash" ]]; then
 		local _grep=$(cat "$__HOME__/.bash_profile" 2>/dev/null | grep "$IPATH/env")
 		if [ "$_grep" = "" ]; then
-			# If the .bash_profile is not existing, create a new one
-			[ ! -f "$__HOME__/.bash_profile" ] && touch "$__HOME__/.bash_profile"
 			[ -f "$__HOME__/.bash_profile" ] && echo "$_source" >>"$__HOME__/.bash_profile"
 		fi
 	fi
@@ -594,17 +575,13 @@ main() {
 
 		get_wasmedge_release
 		get_wasmedge_ggml_plugin
-	if [[ "${VERSION}" =~ ^"0.14.1" ]]; then
-		# WASI-Logging is bundled into the WasmEdge release package starting from 0.14.1-rc.1
-		DISABLE_WASI_LOGGING="1"
-	fi
 
-	if [[ "${DISABLE_WASI_LOGGING}" == "0" ]]; then
-		get_wasmedge_wasi_logging_plugin
-	fi
+		if [ "${ENABLE_RUSTLS}" == 1 ]; then
+			get_wasmedge_rustls_plugin
+		fi
 
 		install "$IPKG" "include" "lib" "bin" "plugin"
-		wasmedge_checks "$VERSION"
+		wasmedge_checks "$VERSION" "wasmedge"
 	else
 		error "Installation path invalid"
 		eprintf "Please provide a valid path"

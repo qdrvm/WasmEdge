@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
+// SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 #include "driver/unitool.h"
 #include "common/spdlog.h"
@@ -7,6 +7,7 @@
 #include "driver/tool.h"
 #include "po/argument_parser.h"
 
+#include <iostream>
 #include <string_view>
 
 namespace WasmEdge {
@@ -51,12 +52,13 @@ int UniTool(int Argc, const char *Argv[], const ToolType ToolSelect) noexcept {
     return EXIT_FAILURE;
   }
   if (Parser.isVersion()) {
-    fmt::print("{} version {}\n"sv, Argv[0], kVersionString);
+    std::cout << Argv[0] << " version "sv << kVersionString << '\n';
     for (const auto &Plugin : Plugin::Plugin::plugins()) {
       auto PluginVersion = Plugin.version();
-      fmt::print("{} (plugin \"{}\") version {}.{}.{}.{}\n"sv,
-                 Plugin.path().string(), Plugin.name(), PluginVersion.Major,
-                 PluginVersion.Minor, PluginVersion.Patch, PluginVersion.Build);
+      std::cout << Plugin.path().string() << " (plugin \""sv << Plugin.name()
+                << "\") version "sv << PluginVersion.Major << '.'
+                << PluginVersion.Minor << '.' << PluginVersion.Patch << '.'
+                << PluginVersion.Build << '\n';
     }
     return EXIT_SUCCESS;
   }

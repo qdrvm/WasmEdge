@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
+// SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 #include "vm/vm.h"
 
-#include "ast/module.h"
 #include "host/wasi/wasimodule.h"
 #include "plugin/plugin.h"
 #include "llvm/compiler.h"
@@ -14,35 +13,14 @@
 #include "host/mock/wasi_nn_module.h"
 #include "host/mock/wasmedge_image_module.h"
 #include "host/mock/wasmedge_process_module.h"
-#include "host/mock/wasmedge_stablediffusion_module.h"
 #include "host/mock/wasmedge_tensorflow_module.h"
 #include "host/mock/wasmedge_tensorflowlite_module.h"
-#include "validator/validator.h"
-#include <memory>
 #include <variant>
 
 namespace WasmEdge {
 namespace VM {
 
 namespace {
-
-template <typename T> struct VisitUnit {
-  using MT = std::function<T(std::unique_ptr<AST::Module> &)>;
-  using CT = std::function<T(std::unique_ptr<AST::Component::Component> &)>;
-
-  VisitUnit(MT F, CT G) : VisitMod{F}, VisitComp{G} {}
-  T operator()(std::unique_ptr<AST::Module> &Mod) const {
-    return VisitMod(Mod);
-  }
-  T operator()(std::unique_ptr<AST::Component::Component> &Comp) const {
-    return VisitComp(Comp);
-  }
-
-private:
-  MT VisitMod;
-  CT VisitComp;
-};
-
 template <typename T>
 std::unique_ptr<Runtime::Instance::ModuleInstance>
 createPluginModule(std::string_view PName, std::string_view MName) {
@@ -126,9 +104,6 @@ void VM::unsafeLoadPlugInHosts() {
           "wasmedge_tensorflowlite"sv, "wasmedge_tensorflowlite"sv));
   PlugInModInsts.push_back(createPluginModule<Host::WasmEdgeImageModuleMock>(
       "wasmedge_image"sv, "wasmedge_image"sv));
-  PlugInModInsts.push_back(
-      createPluginModule<Host::WasmEdgeStableDiffusionModuleMock>(
-          "wasmedge_stablediffusion"sv, "wasmedge_stablediffusion"sv));
 
   // Load the other non-official plugins.
   for (const auto &Plugin : Plugin::Plugin::plugins()) {
@@ -142,15 +117,11 @@ void VM::unsafeLoadPlugInHosts() {
         Plugin.name() == "wasmedge_process"sv ||
         Plugin.name() == "wasmedge_tensorflow"sv ||
         Plugin.name() == "wasmedge_tensorflowlite"sv ||
-        Plugin.name() == "wasmedge_image"sv ||
-        Plugin.name() == "wasmedge_stablediffusion"sv) {
+        Plugin.name() == "wasmedge_image"sv) {
       continue;
     }
     for (const auto &Module : Plugin.modules()) {
       PlugInModInsts.push_back(Module.create());
-    }
-    for (const auto &Component : Plugin.components()) {
-      PlugInCompInsts.push_back(Component.create());
     }
   }
 }
@@ -166,9 +137,6 @@ void VM::unsafeRegisterPlugInHosts() {
   // Register all created module instances from plugins.
   for (auto &It : PlugInModInsts) {
     ExecutorEngine.registerModule(StoreRef, *(It.get()));
-  }
-  for (auto &It : PlugInCompInsts) {
-    ExecutorEngine.registerComponent(StoreRef, *(It.get()));
   }
 }
 
@@ -243,19 +211,14 @@ VM::unsafeRunWasmFile(const std::filesystem::path &Path, std::string_view Func,
   }
   // Load wasm unit.
   if (auto Res = LoaderEngine.parseWasmUnit(Path)) {
-    return std::visit(
-        VisitUnit<Expect<std::vector<std::pair<ValVariant, ValType>>>>(
-            [&](auto &M)
-                -> Expect<std::vector<std::pair<ValVariant, ValType>>> {
-              Mod = std::move(M);
-              return unsafeRunWasmFile(*Mod, Func, Params, ParamTypes);
-            },
-            [&](auto &C)
-                -> Expect<std::vector<std::pair<ValVariant, ValType>>> {
-              Comp = std::move(C);
-              return unsafeRunWasmFile(*Comp, Func, Params, ParamTypes);
-            }),
-        *Res);
+    if (std::holds_alternative<std::unique_ptr<AST::Module>>(*Res)) {
+      auto M = std::move(std::get<std::unique_ptr<AST::Module>>(*Res));
+      return unsafeRunWasmFile(*M, Func, Params, ParamTypes);
+    } else {
+      return unsafeRunWasmFile(
+          (*std::get<std::unique_ptr<AST::Component::Component>>(*Res)), Func,
+          Params, ParamTypes);
+    }
   } else {
     return Unexpect(Res);
   }
@@ -272,19 +235,15 @@ VM::unsafeRunWasmFile(Span<const Byte> Code, std::string_view Func,
   }
   // Load wasm unit.
   if (auto Res = LoaderEngine.parseWasmUnit(Code)) {
-    return std::visit(
-        VisitUnit<Expect<std::vector<std::pair<ValVariant, ValType>>>>(
-            [&](auto &M)
-                -> Expect<std::vector<std::pair<ValVariant, ValType>>> {
-              Mod = std::move(M);
-              return unsafeRunWasmFile(*Mod, Func, Params, ParamTypes);
-            },
-            [&](auto &C)
-                -> Expect<std::vector<std::pair<ValVariant, ValType>>> {
-              Comp = std::move(C);
-              return unsafeRunWasmFile(*Comp, Func, Params, ParamTypes);
-            }),
-        *Res);
+    if (std::holds_alternative<std::unique_ptr<AST::Module>>(*Res)) {
+      std::unique_ptr<AST::Module> M =
+          std::move(std::get<std::unique_ptr<AST::Module>>(*Res));
+      return unsafeRunWasmFile(*M, Func, Params, ParamTypes);
+    } else {
+      std::unique_ptr<AST::Component::Component> C =
+          std::move(std::get<std::unique_ptr<AST::Component::Component>>(*Res));
+      return unsafeRunWasmFile(*C, Func, Params, ParamTypes);
+    }
   } else {
     return Unexpect(Res);
   }
@@ -327,29 +286,10 @@ VM::unsafeRunWasmFile(const AST::Module &Module, std::string_view Func,
   if (ActiveModInst) {
     // Execute function and return values with the module instance.
     return unsafeExecute(ActiveModInst.get(), Func, Params, ParamTypes);
-  }
-  spdlog::error(ErrCode::Value::WrongInstanceAddress);
-  spdlog::error(ErrInfo::InfoExecuting("", Func));
-  return Unexpect(ErrCode::Value::WrongInstanceAddress);
-}
-
-Expect<std::vector<std::pair<ValVariant, ValType>>>
-VM::unsafeExecute(const Runtime::Instance::ComponentInstance *CompInst,
-                  std::string_view Func, Span<const ValVariant> Params,
-                  Span<const ValType> ParamTypes) {
-  // Find exported function by name.
-  Runtime::Instance::FunctionInstance *FuncInst =
-      CompInst->findFuncExports(Func);
-
-  // Execute function.
-  if (auto Res = ExecutorEngine.invoke(FuncInst, Params, ParamTypes);
-      unlikely(!Res)) {
-    if (Res.error() != ErrCode::Value::Terminated) {
-      spdlog::error(ErrInfo::InfoExecuting(CompInst->getComponentName(), Func));
-    }
-    return Unexpect(Res);
   } else {
-    return Res;
+    spdlog::error(ErrCode::Value::WrongInstanceAddress);
+    spdlog::error(ErrInfo::InfoExecuting("", Func));
+    return Unexpect(ErrCode::Value::WrongInstanceAddress);
   }
 }
 
@@ -400,27 +340,37 @@ VM::asyncRunWasmFile(const AST::Module &Module, std::string_view Func,
 
 Expect<void> VM::unsafeLoadWasm(const std::filesystem::path &Path) {
   // If not load successfully, the previous status will be reserved.
-  auto Res = LoaderEngine.parseWasmUnit(Path);
-  if (!Res) {
+  if (auto Res = LoaderEngine.parseWasmUnit(Path)) {
+    if (std::holds_alternative<std::unique_ptr<AST::Module>>(*Res)) {
+      Mod = std::move(std::get<std::unique_ptr<AST::Module>>(*Res));
+    } else if (std::holds_alternative<
+                   std::unique_ptr<AST::Component::Component>>(*Res)) {
+      spdlog::error("component execution is not done yet.");
+    } else {
+      return Unexpect(Res);
+    }
+    Stage = VMStage::Loaded;
+  } else {
     return Unexpect(Res);
   }
-  std::visit(VisitUnit<void>([&](auto &M) -> void { Mod = std::move(M); },
-                             [&](auto &C) -> void { Comp = std::move(C); }),
-             *Res);
-  Stage = VMStage::Loaded;
   return {};
 }
 
 Expect<void> VM::unsafeLoadWasm(Span<const Byte> Code) {
   // If not load successfully, the previous status will be reserved.
-  auto Res = LoaderEngine.parseWasmUnit(Code);
-  if (!Res) {
+  if (auto Res = LoaderEngine.parseWasmUnit(Code)) {
+    if (std::holds_alternative<std::unique_ptr<AST::Module>>(*Res)) {
+      Mod = std::move(std::get<std::unique_ptr<AST::Module>>(*Res));
+    } else if (std::holds_alternative<
+                   std::unique_ptr<AST::Component::Component>>(*Res)) {
+      spdlog::error("component execution is not done yet.");
+    } else {
+      return Unexpect(Res);
+    }
+    Stage = VMStage::Loaded;
+  } else {
     return Unexpect(Res);
   }
-  std::visit(VisitUnit<void>([&](auto &M) -> void { Mod = std::move(M); },
-                             [&](auto &C) -> void { Comp = std::move(C); }),
-             *Res);
-  Stage = VMStage::Loaded;
   return {};
 }
 
@@ -430,42 +380,18 @@ Expect<void> VM::unsafeLoadWasm(const AST::Module &Module) {
   return {};
 }
 
-struct Validate {
-  // borrow validator to pass control to it
-  Validate(Validator::Validator &Engine) : ValidatorEngine(Engine) {}
-  Expect<void> operator()(const std::unique_ptr<AST::Module> &Mod) const {
-    return ValidatorEngine.validate(*Mod.get());
-  }
-  Expect<void>
-  operator()(const std::unique_ptr<AST::Component::Component> &Comp) const {
-    return ValidatorEngine.validate(*Comp.get());
-  }
-
-private:
-  Validator::Validator &ValidatorEngine;
-};
-
 Expect<void> VM::unsafeValidate() {
   if (Stage < VMStage::Loaded) {
     // When module is not loaded, not validate.
     spdlog::error(ErrCode::Value::WrongVMWorkflow);
     return Unexpect(ErrCode::Value::WrongVMWorkflow);
   }
-
-  if (Mod) {
-    if (auto Res = ValidatorEngine.validate(*Mod.get()); !Res) {
-      return Unexpect(Res);
-    }
-  } else if (Comp) {
-    if (auto Res = ValidatorEngine.validate(*Comp.get()); !Res) {
-      return Unexpect(Res);
-    }
+  if (auto Res = ValidatorEngine.validate(*Mod.get())) {
+    Stage = VMStage::Validated;
+    return {};
   } else {
-    spdlog::error(ErrCode::Value::WrongVMWorkflow);
-    return Unexpect(ErrCode::Value::WrongVMWorkflow);
+    return Unexpect(Res);
   }
-  Stage = VMStage::Validated;
-  return {};
 }
 
 Expect<void> VM::unsafeInstantiate() {
@@ -496,25 +422,14 @@ Expect<void> VM::unsafeInstantiate() {
       spdlog::error("LLVM disabled, JIT is unsupported!");
 #endif
     }
+  }
 
-    if (auto Res = ExecutorEngine.instantiateModule(StoreRef, *Mod)) {
-      Stage = VMStage::Instantiated;
-      ActiveModInst = std::move(*Res);
-      return {};
-    } else {
-      return Unexpect(Res);
-    }
-  } else if (Comp) {
-    if (auto Res = ExecutorEngine.instantiateComponent(StoreRef, *Comp)) {
-      Stage = VMStage::Instantiated;
-      ActiveCompInst = std::move(*Res);
-      return {};
-    } else {
-      return Unexpect(Res);
-    }
+  if (auto Res = ExecutorEngine.instantiateModule(StoreRef, *Mod.get())) {
+    Stage = VMStage::Instantiated;
+    ActiveModInst = std::move(*Res);
+    return {};
   } else {
-    spdlog::error(ErrCode::Value::WrongVMWorkflow);
-    return Unexpect(ErrCode::Value::WrongVMWorkflow);
+    return Unexpect(Res);
   }
 }
 
@@ -524,13 +439,11 @@ VM::unsafeExecute(std::string_view Func, Span<const ValVariant> Params,
   if (ActiveModInst) {
     // Execute function and return values with the module instance.
     return unsafeExecute(ActiveModInst.get(), Func, Params, ParamTypes);
+  } else {
+    spdlog::error(ErrCode::Value::WrongInstanceAddress);
+    spdlog::error(ErrInfo::InfoExecuting("", Func));
+    return Unexpect(ErrCode::Value::WrongInstanceAddress);
   }
-  if (ActiveCompInst) {
-    return unsafeExecute(ActiveCompInst.get(), Func, Params, ParamTypes);
-  }
-  spdlog::error(ErrCode::Value::WrongInstanceAddress);
-  spdlog::error(ErrInfo::InfoExecuting("", Func));
-  return Unexpect(ErrCode::Value::WrongInstanceAddress);
 }
 
 Expect<std::vector<std::pair<ValVariant, ValType>>>
@@ -596,18 +509,8 @@ VM::asyncExecute(std::string_view ModName, std::string_view Func,
 }
 
 void VM::unsafeCleanup() {
-  if (Mod) {
-    Mod.reset();
-  }
-  if (Comp) {
-    Comp.reset();
-  }
-  if (ActiveModInst) {
-    ActiveModInst.reset();
-  }
-  if (ActiveCompInst) {
-    ActiveCompInst.reset();
-  }
+  Mod.reset();
+  ActiveModInst.reset();
   StoreRef.reset();
   RegModInsts.clear();
   Stat.clear();
@@ -630,8 +533,6 @@ VM::unsafeGetFunctionList() const {
         Map.emplace_back(Func.first, FuncType);
       }
     });
-  } else if (ActiveCompInst) {
-    return ActiveCompInst->getFuncExports();
   }
   return Map;
 }

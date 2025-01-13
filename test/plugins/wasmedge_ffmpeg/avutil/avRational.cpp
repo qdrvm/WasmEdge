@@ -1,9 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #include "avutil/avRational.h"
 #include "avutil/module.h"
-
 #include "utils.h"
 
 #include <gtest/gtest.h>
@@ -13,6 +9,7 @@ namespace Host {
 namespace WasmEdgeFFmpeg {
 
 TEST_F(FFmpegTest, AVRational) {
+
   ASSERT_TRUE(AVUtilMod != nullptr);
 
   uint32_t NumPtr = UINT32_C(4);

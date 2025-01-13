@@ -1,13 +1,9 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #pragma once
 
 #include "bindings.h"
 #include "plugin/plugin.h"
 
-#include <memory>
-#include <vector>
+#include "vector"
 
 namespace WasmEdge {
 namespace Host {

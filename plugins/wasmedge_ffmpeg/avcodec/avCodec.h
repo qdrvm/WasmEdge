@@ -1,137 +1,158 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #pragma once
-
-#include "ffmpeg_base.h"
+#include "avcodec_base.h"
+#include "runtime/callingframe.h"
 
 namespace WasmEdge {
 namespace Host {
 namespace WasmEdgeFFmpeg {
 namespace AVcodec {
 
-class AVCodecID : public HostFunction<AVCodecID> {
+class AVCodecID : public WasmEdgeFFmpegAVCodec<AVCodecID> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecID(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<uint32_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId);
 };
 
-class AVCodecType : public HostFunction<AVCodecType> {
+class AVCodecType : public WasmEdgeFFmpegAVCodec<AVCodecType> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecType(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId);
 };
 
-class AVCodecMaxLowres : public HostFunction<AVCodecMaxLowres> {
+class AVCodecMaxLowres : public WasmEdgeFFmpegAVCodec<AVCodecMaxLowres> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecMaxLowres(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId);
 };
 
-class AVCodecCapabilities : public HostFunction<AVCodecCapabilities> {
+class AVCodecCapabilities : public WasmEdgeFFmpegAVCodec<AVCodecCapabilities> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecCapabilities(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId);
 };
 
-class AVCodecGetNameLen : public HostFunction<AVCodecGetNameLen> {
+class AVCodecGetNameLen : public WasmEdgeFFmpegAVCodec<AVCodecGetNameLen> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecGetNameLen(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId);
 };
 
-class AVCodecGetName : public HostFunction<AVCodecGetName> {
+class AVCodecGetName : public WasmEdgeFFmpegAVCodec<AVCodecGetName> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecGetName(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId,
                        uint32_t NamePtr, uint32_t NameLen);
 };
 
-class AVCodecGetLongNameLen : public HostFunction<AVCodecGetLongNameLen> {
+class AVCodecGetLongNameLen
+    : public WasmEdgeFFmpegAVCodec<AVCodecGetLongNameLen> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecGetLongNameLen(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId);
 };
 
-class AVCodecGetLongName : public HostFunction<AVCodecGetLongName> {
+class AVCodecGetLongName : public WasmEdgeFFmpegAVCodec<AVCodecGetLongName> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecGetLongName(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId,
                        uint32_t LongNamePtr, uint32_t LongNameLen);
 };
 
-class AVCodecProfiles : public HostFunction<AVCodecProfiles> {
+class AVCodecProfiles : public WasmEdgeFFmpegAVCodec<AVCodecProfiles> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecProfiles(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId);
 };
 
-class AVCodecPixFmtsIsNull : public HostFunction<AVCodecPixFmtsIsNull> {
+class AVCodecPixFmtsIsNull
+    : public WasmEdgeFFmpegAVCodec<AVCodecPixFmtsIsNull> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecPixFmtsIsNull(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId);
 };
 
-class AVCodecPixFmtsIter : public HostFunction<AVCodecPixFmtsIter> {
+class AVCodecPixFmtsIter : public WasmEdgeFFmpegAVCodec<AVCodecPixFmtsIter> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecPixFmtsIter(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<uint32_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId,
                         uint32_t Idx);
 };
 
 class AVCodecSupportedFrameratesIsNull
-    : public HostFunction<AVCodecSupportedFrameratesIsNull> {
+    : public WasmEdgeFFmpegAVCodec<AVCodecSupportedFrameratesIsNull> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecSupportedFrameratesIsNull(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId);
 };
 
 class AVCodecSupportedFrameratesIter
-    : public HostFunction<AVCodecSupportedFrameratesIter> {
+    : public WasmEdgeFFmpegAVCodec<AVCodecSupportedFrameratesIter> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecSupportedFrameratesIter(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId,
                        uint32_t Idx, uint32_t NumPtr, uint32_t DenPtr);
 };
 
 class AVCodecSupportedSampleRatesIsNull
-    : public HostFunction<AVCodecSupportedSampleRatesIsNull> {
+    : public WasmEdgeFFmpegAVCodec<AVCodecSupportedSampleRatesIsNull> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecSupportedSampleRatesIsNull(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId);
 };
 
 class AVCodecSupportedSampleRatesIter
-    : public HostFunction<AVCodecSupportedSampleRatesIter> {
+    : public WasmEdgeFFmpegAVCodec<AVCodecSupportedSampleRatesIter> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecSupportedSampleRatesIter(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId,
                        uint32_t Idx);
 };
 
 class AVCodecChannelLayoutIsNull
-    : public HostFunction<AVCodecChannelLayoutIsNull> {
+    : public WasmEdgeFFmpegAVCodec<AVCodecChannelLayoutIsNull> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecChannelLayoutIsNull(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId);
 };
 
-class AVCodecChannelLayoutIter : public HostFunction<AVCodecChannelLayoutIter> {
+class AVCodecChannelLayoutIter
+    : public WasmEdgeFFmpegAVCodec<AVCodecChannelLayoutIter> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecChannelLayoutIter(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<uint64_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId,
                         uint32_t Idx);
 };
 
-class AVCodecSampleFmtsIsNull : public HostFunction<AVCodecSampleFmtsIsNull> {
+class AVCodecSampleFmtsIsNull
+    : public WasmEdgeFFmpegAVCodec<AVCodecSampleFmtsIsNull> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecSampleFmtsIsNull(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId);
 };
 
-class AVCodecSampleFmtsIter : public HostFunction<AVCodecSampleFmtsIter> {
+class AVCodecSampleFmtsIter
+    : public WasmEdgeFFmpegAVCodec<AVCodecSampleFmtsIter> {
 public:
-  using HostFunction::HostFunction;
+  AVCodecSampleFmtsIter(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVCodec(HostEnv) {}
   Expect<uint32_t> body(const Runtime::CallingFrame &Frame, uint32_t AvCodecId,
                         uint32_t Idx);
 };

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
+// SPDX-FileCopyrightText: 2019-2022 Second State INC
 
 #pragma once
 
@@ -20,7 +20,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <memory>
 #include <queue>
 #include <string>
 #include <string_view>
@@ -53,16 +52,6 @@ std::vector<uint8_t> operator"" _u8(const char *Str, std::size_t Len);
 
 std::vector<uint8_t> operator"" _u8v(const char *Str, std::size_t Len);
 
-template <typename T, typename U>
-inline std::unique_ptr<T> dynamicPointerCast(std::unique_ptr<U> &&R) noexcept {
-  static_assert(std::has_virtual_destructor_v<T>);
-  T *P = dynamic_cast<T *>(R.get());
-  if (P) {
-    R.release();
-  }
-  return std::unique_ptr<T>(P);
-}
-
 /// Designed for testing.
 class WasiCryptoTest : public ::testing::Test {
 public:
@@ -79,29 +68,47 @@ public:
     if (const auto *Plugin = WasmEdge::Plugin::Plugin::find("wasi_crypto"sv)) {
       if (const auto *Module =
               Plugin->findModule("wasi_crypto_asymmetric_common"sv)) {
-        WasiCryptoAsymCommonMod = dynamicPointerCast<
-            WasmEdge::Host::WasiCryptoAsymmetricCommonModule>(Module->create());
+        WasiCryptoAsymCommonMod =
+            dynamic_cast<WasmEdge::Host::WasiCryptoAsymmetricCommonModule *>(
+                Module->create().release());
       }
       if (const auto *Module = Plugin->findModule("wasi_crypto_common"sv)) {
         WasiCryptoCommonMod =
-            dynamicPointerCast<WasmEdge::Host::WasiCryptoCommonModule>(
-                Module->create());
+            dynamic_cast<WasmEdge::Host::WasiCryptoCommonModule *>(
+                Module->create().release());
       }
       if (const auto *Module = Plugin->findModule("wasi_crypto_kx"sv)) {
-        WasiCryptoKxMod =
-            dynamicPointerCast<WasmEdge::Host::WasiCryptoKxModule>(
-                Module->create());
+        WasiCryptoKxMod = dynamic_cast<WasmEdge::Host::WasiCryptoKxModule *>(
+            Module->create().release());
       }
       if (const auto *Module = Plugin->findModule("wasi_crypto_signatures"sv)) {
         WasiCryptoSignMod =
-            dynamicPointerCast<WasmEdge::Host::WasiCryptoSignaturesModule>(
-                Module->create());
+            dynamic_cast<WasmEdge::Host::WasiCryptoSignaturesModule *>(
+                Module->create().release());
       }
       if (const auto *Module = Plugin->findModule("wasi_crypto_symmetric"sv)) {
         WasiCryptoSymmMod =
-            dynamicPointerCast<WasmEdge::Host::WasiCryptoSymmetricModule>(
-                Module->create());
+            dynamic_cast<WasmEdge::Host::WasiCryptoSymmetricModule *>(
+                Module->create().release());
       }
+    }
+  }
+
+  ~WasiCryptoTest() override {
+    if (WasiCryptoAsymCommonMod) {
+      delete WasiCryptoAsymCommonMod;
+    }
+    if (WasiCryptoCommonMod) {
+      delete WasiCryptoCommonMod;
+    }
+    if (WasiCryptoKxMod) {
+      delete WasiCryptoKxMod;
+    }
+    if (WasiCryptoSignMod) {
+      delete WasiCryptoSignMod;
+    }
+    if (WasiCryptoSymmMod) {
+      delete WasiCryptoSymmMod;
     }
   }
 
@@ -391,12 +398,11 @@ protected:
 
   std::array<WasmEdge::ValVariant, 1> Errno;
 
-  std::unique_ptr<Host::WasiCryptoAsymmetricCommonModule>
-      WasiCryptoAsymCommonMod;
-  std::unique_ptr<Host::WasiCryptoCommonModule> WasiCryptoCommonMod;
-  std::unique_ptr<Host::WasiCryptoKxModule> WasiCryptoKxMod;
-  std::unique_ptr<Host::WasiCryptoSignaturesModule> WasiCryptoSignMod;
-  std::unique_ptr<Host::WasiCryptoSymmetricModule> WasiCryptoSymmMod;
+  Host::WasiCryptoAsymmetricCommonModule *WasiCryptoAsymCommonMod = nullptr;
+  Host::WasiCryptoCommonModule *WasiCryptoCommonMod = nullptr;
+  Host::WasiCryptoKxModule *WasiCryptoKxMod = nullptr;
+  Host::WasiCryptoSignaturesModule *WasiCryptoSignMod = nullptr;
+  Host::WasiCryptoSymmetricModule *WasiCryptoSymmMod = nullptr;
 };
 
 } // namespace WasiCrypto

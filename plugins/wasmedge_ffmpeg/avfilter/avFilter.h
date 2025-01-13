@@ -1,101 +1,115 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #pragma once
 
-#include "ffmpeg_base.h"
+#include "avfilter_base.h"
+#include "runtime/callingframe.h"
 
 namespace WasmEdge {
 namespace Host {
 namespace WasmEdgeFFmpeg {
 namespace AVFilter {
 
-class AVFilterNameLength : public HostFunction<AVFilterNameLength> {
+class AVFilterNameLength : public WasmEdgeFFmpegAVFilter<AVFilterNameLength> {
 public:
-  using HostFunction::HostFunction;
+  AVFilterNameLength(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVFilter(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t FilterId);
 };
 
-class AVFilterName : public HostFunction<AVFilterName> {
+class AVFilterName : public WasmEdgeFFmpegAVFilter<AVFilterName> {
 public:
-  using HostFunction::HostFunction;
+  AVFilterName(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVFilter(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t FilterId,
                        uint32_t NamePtr, uint32_t NameLen);
 };
 
 class AVFilterDescriptionLength
-    : public HostFunction<AVFilterDescriptionLength> {
+    : public WasmEdgeFFmpegAVFilter<AVFilterDescriptionLength> {
 public:
-  using HostFunction::HostFunction;
+  AVFilterDescriptionLength(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVFilter(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t FilterId);
 };
 
-class AVFilterDescription : public HostFunction<AVFilterDescription> {
+class AVFilterDescription : public WasmEdgeFFmpegAVFilter<AVFilterDescription> {
 public:
-  using HostFunction::HostFunction;
+  AVFilterDescription(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVFilter(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t FilterId,
                        uint32_t DescPtr, uint32_t DescLen);
 };
 
-class AVFilterNbInputs : public HostFunction<AVFilterNbInputs> {
+class AVFilterNbInputs : public WasmEdgeFFmpegAVFilter<AVFilterNbInputs> {
 public:
-  using HostFunction::HostFunction;
+  AVFilterNbInputs(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVFilter(HostEnv) {}
   Expect<uint32_t> body(const Runtime::CallingFrame &Frame, uint32_t FilterId);
 };
 
-class AVFilterNbOutputs : public HostFunction<AVFilterNbOutputs> {
+class AVFilterNbOutputs : public WasmEdgeFFmpegAVFilter<AVFilterNbOutputs> {
 public:
-  using HostFunction::HostFunction;
+  AVFilterNbOutputs(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVFilter(HostEnv) {}
   Expect<uint32_t> body(const Runtime::CallingFrame &Frame, uint32_t FilterId);
 };
 
-class AVFilterFlags : public HostFunction<AVFilterFlags> {
+class AVFilterFlags : public WasmEdgeFFmpegAVFilter<AVFilterFlags> {
 public:
-  using HostFunction::HostFunction;
+  AVFilterFlags(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVFilter(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t FilterId);
 };
 
-class AVFilterInOutSetName : public HostFunction<AVFilterInOutSetName> {
+class AVFilterInOutSetName
+    : public WasmEdgeFFmpegAVFilter<AVFilterInOutSetName> {
 public:
-  using HostFunction::HostFunction;
+  AVFilterInOutSetName(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVFilter(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t InOutId,
                        uint32_t NamePtr, uint32_t NameLen);
 };
 
 class AVFilterInOutSetFilterCtx
-    : public HostFunction<AVFilterInOutSetFilterCtx> {
+    : public WasmEdgeFFmpegAVFilter<AVFilterInOutSetFilterCtx> {
 public:
-  using HostFunction::HostFunction;
+  AVFilterInOutSetFilterCtx(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVFilter(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t InOutId,
                        uint32_t FilterCtxId);
 };
 
-class AVFilterInOutSetPadIdx : public HostFunction<AVFilterInOutSetPadIdx> {
+class AVFilterInOutSetPadIdx
+    : public WasmEdgeFFmpegAVFilter<AVFilterInOutSetPadIdx> {
 public:
-  using HostFunction::HostFunction;
+  AVFilterInOutSetPadIdx(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVFilter(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t InOutId,
                        int32_t PadIdx);
 };
 
-class AVFilterInOutSetNext : public HostFunction<AVFilterInOutSetNext> {
+class AVFilterInOutSetNext
+    : public WasmEdgeFFmpegAVFilter<AVFilterInOutSetNext> {
 public:
-  using HostFunction::HostFunction;
+  AVFilterInOutSetNext(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVFilter(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t InOutId,
                        uint32_t NextInOutId);
 };
 
 class AVFilterGetInputsFilterPad
-    : public HostFunction<AVFilterGetInputsFilterPad> {
+    : public WasmEdgeFFmpegAVFilter<AVFilterGetInputsFilterPad> {
 public:
-  using HostFunction::HostFunction;
+  AVFilterGetInputsFilterPad(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVFilter(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t FilterId,
                        uint32_t FilterPadPtr);
 };
 
 class AVFilterGetOutputsFilterPad
-    : public HostFunction<AVFilterGetOutputsFilterPad> {
+    : public WasmEdgeFFmpegAVFilter<AVFilterGetOutputsFilterPad> {
 public:
-  using HostFunction::HostFunction;
+  AVFilterGetOutputsFilterPad(std::shared_ptr<WasmEdgeFFmpegEnv> HostEnv)
+      : WasmEdgeFFmpegAVFilter(HostEnv) {}
   Expect<int32_t> body(const Runtime::CallingFrame &Frame, uint32_t FilterId,
                        uint32_t FilterPadPtr);
 };

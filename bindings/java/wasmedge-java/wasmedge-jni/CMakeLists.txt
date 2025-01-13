@@ -49,3 +49,4 @@ add_library(${TARGET} SHARED
         lib/Async.c)
 
 target_link_libraries(${TARGET} ${WasmEdge_LIBRARIES})
+

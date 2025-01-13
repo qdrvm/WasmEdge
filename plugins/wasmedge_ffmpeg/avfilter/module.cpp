@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2019-2024 Second State INC
-
 #include "module.h"
 #include "avFilter.h"
 #include "avfilter_func.h"
@@ -14,6 +11,7 @@ namespace AVFilter {
 WasmEdgeFFmpegAVFilterModule::WasmEdgeFFmpegAVFilterModule(
     std::shared_ptr<WasmEdgeFFmpegEnv> Env)
     : ModuleInstance("wasmedge_ffmpeg_avfilter") {
+
   addHostFunc("wasmedge_ffmpeg_avfilter_avfilter_graph_alloc",
               std::make_unique<AVFilterGraphAlloc>(Env));
   addHostFunc("wasmedge_ffmpeg_avfilter_avfilter_graph_config",
